@@ -1742,44 +1742,118 @@ function shareWhatsApp(){
   const td=rows.reduce((s,r)=>s+r.d,0),tr2=rows.reduce((s,r)=>s+r.ret,0);
   const pg=pct(tr2,td);
   const ti=clis.reduce((s,c)=>s+c.inv,0);
-  const period=[f.yr?'Año '+f.yr:'',f.mn?f.mn:'',f.cn?'Canal '+f.cn:''].filter(Boolean).join(' · ')||'Todos los períodos';
+  const period=[f.yr?'Año '+f.yr:'',f.mn||'',f.cn?'Canal '+f.cn:''].filter(Boolean).join(' · ')||'Todos los períodos';
   const now=new Date().toLocaleDateString('es-CO',{day:'2-digit',month:'short',year:'numeric'});
 
-  let msg=`📊 *SIGAC — Informe de Cubetas*\n`;
-  msg+=`_${now} · ${period}_\n\n`;
+  let msg='📊 *SIGAC — Informe de Cubetas*\n';
+  msg+='_'+now+' · '+period+'_\n\n';
 
-  // KPIs
   const pIco=pg>=85?'🟢':pg>=60?'🟡':'🔴';
-  msg+=`📦 Despacho: *${fN(td)}*\n`;
-  msg+=`♻️ Retorno: *${fN(tr2)}*\n`;
-  msg+=`${pIco} % Retorno: *${fP(pg)}*\n`;
-  msg+=`⚠️ Inventario en calle: *${fN(ti)}*\n\n`;
+  msg+='📦 Despacho: *'+fN(td)+'*\n';
+  msg+='♻️ Retorno: *'+fN(tr2)+'*\n';
+  msg+=pIco+' % Retorno: *'+fP(pg)+'*\n';
+  msg+='⚠️ Inventario en calle: *'+fN(ti)+'*\n\n';
 
-  // Top canales
   const topCan=sortByCrit(canalD).slice(0,6);
   if(topCan.length){
-    msg+=`*🏪 Canales (top ${topCan.length}):*\n`;
+    msg+='*🏪 Canales (top '+topCan.length+'):*\n';
     topCan.forEach((c,i)=>{
       const ic=c.pct>=85?'🟢':c.pct>=60?'🟡':'🔴';
-      msg+=`${i+1}. ${c.canal}: ${ic} ${fP(c.pct)} retorno | Desp: ${fN(c.d)} | Inv: ${fN(c.inv)}\n`;
+      msg+=(i+1)+'. '+c.canal+': '+ic+' '+fP(c.pct)+' | Inv: '+fN(c.inv)+'\n';
     });
     msg+='\n';
   }
 
-  // Top prioridades de recogida
   const rec=sortByCrit(clis).filter(c=>c.inv>0).slice(0,5);
   if(rec.length){
-    msg+=`*⚠️ Prioridades de Recogida (top ${rec.length}):*\n`;
+    msg+='*⚠️ Prioridades de Recogida:*\n';
     rec.forEach((c,i)=>{
       const ic=c.pct<40?'🔴':c.pct<65?'🟠':'🟡';
-      msg+=`${i+1}. ${c.cli} (${c.canal}): ${ic} ${fP(c.pct)} | Inv: ${fN(c.inv)}\n`;
+      msg+=(i+1)+'. '+c.cli+' ('+c.canal+'): '+ic+' '+fP(c.pct)+' | '+fN(c.inv)+' cub.\n';
     });
     msg+='\n';
   }
 
-  msg+=`_SIGAC · Sistema de Gestión de Activos en Clientes_`;
-  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`,'_blank');
+  msg+='🔗 *Ver dashboard interactivo:*\n'+location.href+'\n\n';
+  msg+='_SIGAC · Sistema de Gestión de Activos en Clientes · Alpina_';
+
+  captureViewImage(function(imgFile){
+    if(imgFile){
+      if(navigator.canShare&&navigator.canShare({files:[imgFile]})){
+        navigator.share({title:'SIGAC Informe',text:msg,files:[imgFile]}).catch(function(){
+          _waDownloadAndOpen(imgFile,msg);
+        });
+      } else {
+        _waDownloadAndOpen(imgFile,msg);
+      }
+    } else {
+      window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+    }
+  });
 }
+
+function captureViewImage(cb){
+  const viewCharts={
+    resumen:['ch-rt','ch-rc'],
+    fechas:['ch-fm','ch-fp','ch-fi'],
+    canal:['ch-ctr','ch-cpct','ch-cinv'],
+    clientes:[],
+    inventario:['ch-inv'],
+    recogida:['ch-rec'],
+    anomalias:[]
+  };
+  const ids=viewCharts[VIEW]||[];
+  const canvases=ids.map(function(id){return document.getElementById(id);}).filter(function(c){return c&&c.width>0;});
+  if(!canvases.length){cb(null);return;}
+
+  const COLS=Math.min(2,canvases.length);
+  const W=900,GAP=10,HDR=62;
+  const cellW=Math.floor((W-GAP*(COLS+1))/COLS);
+  const cellH=Math.round(cellW*0.52);
+  const ROWS=Math.ceil(canvases.length/COLS);
+  const H=HDR+GAP+(cellH+GAP)*ROWS;
+
+  const oc=document.createElement('canvas');
+  oc.width=W; oc.height=H;
+  const ctx=oc.getContext('2d');
+
+  // Background
+  ctx.fillStyle='#f5f7fa'; ctx.fillRect(0,0,W,H);
+
+  // Header bar
+  ctx.fillStyle='#003a9e'; ctx.fillRect(0,0,W,HDR);
+  ctx.fillStyle='#ffffff';
+  ctx.font='bold 17px Calibri,Arial,sans-serif';
+  ctx.textBaseline='alphabetic';
+  ctx.fillText('SIGAC — Sistema de Gestión de Activos en Clientes',16,36);
+  const f=gF();
+  const period=[f.yr?'Año '+f.yr:'',f.mn||'',f.cn?'Canal '+f.cn:''].filter(Boolean).join(' · ')||'Todos los períodos';
+  const now=new Date().toLocaleDateString('es-CO',{day:'2-digit',month:'short',year:'numeric'});
+  ctx.font='12px Calibri,Arial,sans-serif'; ctx.fillStyle='rgba(255,255,255,.75)';
+  ctx.fillText(now+' · '+period,16,54);
+
+  // Chart tiles
+  canvases.forEach(function(c,i){
+    const col=i%COLS, row=Math.floor(i/COLS);
+    const x=GAP+col*(cellW+GAP), y=HDR+GAP+row*(cellH+GAP);
+    ctx.fillStyle='#ffffff'; ctx.fillRect(x,y,cellW,cellH);
+    try{ctx.drawImage(c,x+4,y+4,cellW-8,cellH-8);}catch(e){}
+  });
+
+  oc.toBlob(function(blob){
+    cb(blob?new File([blob],'SIGAC_Dashboard.png',{type:'image/png'}):null);
+  },'image/png');
+}
+
+function _waDownloadAndOpen(imgFile,msg){
+  const u=URL.createObjectURL(imgFile);
+  const a=document.createElement('a');
+  a.href=u; a.download=imgFile.name;
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(u);},300);
+  setTimeout(function(){window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');},500);
+}
+
 
 </script>
 </body>
