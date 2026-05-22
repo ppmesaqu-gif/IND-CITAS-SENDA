@@ -271,6 +271,9 @@ thead th.num{text-align:right}
         <div class="exp-item" onclick="closeExpMenu();openEmail('cliente')"><i class="ti ti-mail"></i>Correo — Por Cliente</div>
         <div class="exp-item" onclick="closeExpMenu();openEmail('recogida')"><i class="ti ti-mail"></i>Correo — Plan de Recogida</div>
         <div class="exp-sep"></div>
+        <div class="exp-section">WhatsApp</div>
+        <div class="exp-item" onclick="closeExpMenu();shareWhatsApp()"><i class="ti ti-brand-whatsapp"></i>Resumen por WhatsApp</div>
+        <div class="exp-sep"></div>
         <div class="exp-section">Datos</div>
         <div class="exp-item" onclick="closeExpMenu();exportCSV()"><i class="ti ti-table-export"></i>CSV datos filtrados</div>
         <div class="exp-item" onclick="closeExpMenu();exportClientesCSV()"><i class="ti ti-table-export"></i>CSV resumen clientes</div>
@@ -1175,9 +1178,10 @@ function exportMovCSV(){
     <div class="em-preview-inner" id="em-preview-inner"></div>
   </div>
   <div class="em-actions">
-    <button class="btn btn-g btn-sm" onclick="copyEmailHTML()"><i class="ti ti-copy"></i> Copiar HTML (para Outlook/Gmail)</button>
+    <button class="btn btn-g btn-sm" onclick="copyEmailHTML()"><i class="ti ti-copy"></i> Copiar (Outlook/Gmail)</button>
     <button class="btn btn-g btn-sm" onclick="downloadEML()"><i class="ti ti-download"></i> Descargar .eml</button>
     <button class="btn btn-p btn-sm" onclick="openMailto()"><i class="ti ti-send"></i> Abrir en cliente de correo</button>
+    <button class="btn btn-g btn-sm" onclick="shareWhatsApp()" style="background:#25d366;color:#fff;border-color:#25d366"><i class="ti ti-brand-whatsapp"></i> Enviar por WhatsApp</button>
   </div>
 </div>
 </div>
@@ -1661,10 +1665,7 @@ function buildEmailBody(scope,rows,clis,canalD,mesD){
       <tr><td style="padding:24px">
         ${kpiBlock}
         ${body}
-        <div style="margin:24px 0 20px;text-align:center">
-          <a href="${location.href}" style="display:inline-block;background:#003a9e;color:#fff;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:700;font-size:14px;letter-spacing:.3px">Abrir Dashboard SIGAC →</a>
-        </div>
-        <div style="margin-top:16px;padding-top:16px;border-top:1px solid #e8eaed;font-size:10px;color:#9e9e9e;text-align:center">
+        <div style="margin-top:28px;padding-top:16px;border-top:1px solid #e8eaed;font-size:10px;color:#9e9e9e;text-align:center">
           Generado por SIGAC · Sistema de Gestión de Activos en Clientes · ${new Date().toLocaleString('es-CO')}
         </div>
       </td></tr>
@@ -1690,11 +1691,21 @@ function closeEmail(){document.getElementById('email-modal').classList.remove('s
 document.getElementById('email-modal').addEventListener('click',e=>{if(e.target===document.getElementById('email-modal'))closeEmail();});
 
 function copyEmailHTML(){
-  navigator.clipboard.writeText(EMAIL_HTML).then(()=>{
-    const btn=event.target.closest('button');const orig=btn.innerHTML;
-    btn.innerHTML='<i class="ti ti-check"></i> ¡Copiado!';btn.style.background='#e8f5e9';btn.style.color='#2e7d32';
-    setTimeout(()=>{btn.innerHTML=orig;btn.style.background='';btn.style.color='';},2500);
-  }).catch(()=>alert('No se pudo copiar. Usa Ctrl+A en la vista previa y Ctrl+C.'));
+  const btn=event.target.closest('button');const orig=btn.innerHTML;
+  const ok=()=>{btn.innerHTML='<i class="ti ti-check"></i> ¡Copiado!';btn.style.background='#e8f5e9';btn.style.color='#2e7d32';setTimeout(()=>{btn.innerHTML=orig;btn.style.background='';btn.style.color='';},2500);};
+  const fallback=()=>{
+    const div=document.createElement('div');div.innerHTML=EMAIL_HTML;
+    div.style.cssText='position:fixed;top:-9999px;left:-9999px;opacity:0.01;pointer-events:none';
+    document.body.appendChild(div);
+    const r=document.createRange();r.selectNode(div);
+    const s=window.getSelection();s.removeAllRanges();s.addRange(r);
+    try{document.execCommand('copy');ok();}catch(e){alert('No se pudo copiar. Selecciona el contenido de la vista previa con Ctrl+A y copia con Ctrl+C.');}
+    s.removeAllRanges();document.body.removeChild(div);
+  };
+  if(window.ClipboardItem){
+    const blob=new Blob([EMAIL_HTML],{type:'text/html'});
+    navigator.clipboard.write([new ClipboardItem({'text/html':blob})]).then(ok).catch(fallback);
+  }else{fallback();}
 }
 
 function downloadEML(){
@@ -1714,6 +1725,51 @@ function openMailto(){
   const to=document.getElementById('em-to').value||'';
   const subject=encodeURIComponent(document.getElementById('em-subject').value||'SIGAC Informe');
   window.open(`mailto:${to}?subject=${subject}&body=Ver adjunto HTML`,'_blank');
+}
+
+function shareWhatsApp(){
+  const rows=gRows(),clis=aggCli(rows),canalD=aggCanal(rows);
+  const f=gF();
+  const td=rows.reduce((s,r)=>s+r.d,0),tr2=rows.reduce((s,r)=>s+r.ret,0);
+  const pg=pct(tr2,td);
+  const ti=clis.reduce((s,c)=>s+c.inv,0);
+  const period=[f.yr?'Año '+f.yr:'',f.mn?f.mn:'',f.cn?'Canal '+f.cn:''].filter(Boolean).join(' · ')||'Todos los períodos';
+  const now=new Date().toLocaleDateString('es-CO',{day:'2-digit',month:'short',year:'numeric'});
+
+  let msg=`📊 *SIGAC — Informe de Cubetas*\n`;
+  msg+=`_${now} · ${period}_\n\n`;
+
+  // KPIs
+  const pIco=pg>=85?'🟢':pg>=60?'🟡':'🔴';
+  msg+=`📦 Despacho: *${fN(td)}*\n`;
+  msg+=`♻️ Retorno: *${fN(tr2)}*\n`;
+  msg+=`${pIco} % Retorno: *${fP(pg)}*\n`;
+  msg+=`⚠️ Inventario en calle: *${fN(ti)}*\n\n`;
+
+  // Top canales
+  const topCan=sortByCrit(canalD).slice(0,6);
+  if(topCan.length){
+    msg+=`*🏪 Canales (top ${topCan.length}):*\n`;
+    topCan.forEach((c,i)=>{
+      const ic=c.pct>=85?'🟢':c.pct>=60?'🟡':'🔴';
+      msg+=`${i+1}. ${c.canal}: ${ic} ${fP(c.pct)} retorno | Desp: ${fN(c.d)} | Inv: ${fN(c.inv)}\n`;
+    });
+    msg+='\n';
+  }
+
+  // Top prioridades de recogida
+  const rec=sortByCrit(clis).filter(c=>c.inv>0).slice(0,5);
+  if(rec.length){
+    msg+=`*⚠️ Prioridades de Recogida (top ${rec.length}):*\n`;
+    rec.forEach((c,i)=>{
+      const ic=c.pct<40?'🔴':c.pct<65?'🟠':'🟡';
+      msg+=`${i+1}. ${c.cli} (${c.canal}): ${ic} ${fP(c.pct)} | Inv: ${fN(c.inv)}\n`;
+    });
+    msg+='\n';
+  }
+
+  msg+=`_SIGAC · Sistema de Gestión de Activos en Clientes_`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`,'_blank');
 }
 
 </script>
