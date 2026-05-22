@@ -1793,6 +1793,17 @@ function shareWhatsApp(){
 }
 
 function captureViewImage(cb){
+  const rowsData=gRows(),clis=aggCli(rowsData),canalD=aggCanal(rowsData);
+  const f=gF();
+  const td=rowsData.reduce(function(s,r){return s+r.d;},0);
+  const tr2=rowsData.reduce(function(s,r){return s+r.ret;},0);
+  const pg=pct(tr2,td);
+  const ti=clis.reduce(function(s,c){return s+c.inv;},0);
+  const activos=clis.filter(function(c){return c.d>0;}).length;
+  const crit=clis.filter(function(c){return c.d>=30&&c.pct<50;}).length;
+  const topCan=sortByCrit(canalD).slice(0,5);
+  const topClis=sortByCrit(clis).filter(function(c){return c.inv>0;}).slice(0,5);
+
   const viewCharts={
     resumen:['ch-rt','ch-rc'],
     fechas:['ch-fm','ch-fp','ch-fi'],
@@ -1804,45 +1815,124 @@ function captureViewImage(cb){
   };
   const ids=viewCharts[VIEW]||[];
   const canvases=ids.map(function(id){return document.getElementById(id);}).filter(function(c){return c&&c.width>0;});
-  if(!canvases.length){cb(null);return;}
 
-  const COLS=Math.min(2,canvases.length);
-  const W=900,GAP=10,HDR=62;
+  const W=1000,GAP=10,HDR=62,KPI_H=88,COLS=2;
   const cellW=Math.floor((W-GAP*(COLS+1))/COLS);
-  const cellH=Math.round(cellW*0.52);
-  const ROWS=Math.ceil(canvases.length/COLS);
-  const H=HDR+GAP+(cellH+GAP)*ROWS;
+  const cellH=Math.round(cellW*0.50);
+  // All grid cells = charts + 1 top5 panel
+  const allCells=canvases.concat(['top5']);
+  const ROWS=Math.ceil(allCells.length/COLS);
+  const H=HDR+KPI_H+GAP+(cellH+GAP)*ROWS+GAP;
 
   const oc=document.createElement('canvas');
   oc.width=W; oc.height=H;
   const ctx=oc.getContext('2d');
 
-  // Background
+  // ── Background ──────────────────────────────────────────
   ctx.fillStyle='#f5f7fa'; ctx.fillRect(0,0,W,H);
 
-  // Header bar
+  // ── Header bar ──────────────────────────────────────────
   ctx.fillStyle='#003a9e'; ctx.fillRect(0,0,W,HDR);
-  ctx.fillStyle='#ffffff';
-  ctx.font='bold 17px Calibri,Arial,sans-serif';
-  ctx.textBaseline='alphabetic';
-  ctx.fillText('SIGAC — Sistema de Gestión de Activos en Clientes',16,36);
-  const f=gF();
+  ctx.fillStyle='#fff'; ctx.font='bold 18px Calibri,Arial'; ctx.textBaseline='alphabetic';
+  ctx.fillText('SIGAC — Sistema de Gestión de Activos en Clientes',16,37);
   const period=[f.yr?'Año '+f.yr:'',f.mn||'',f.cn?'Canal '+f.cn:''].filter(Boolean).join(' · ')||'Todos los períodos';
-  const now=new Date().toLocaleDateString('es-CO',{day:'2-digit',month:'short',year:'numeric'});
-  ctx.font='12px Calibri,Arial,sans-serif'; ctx.fillStyle='rgba(255,255,255,.75)';
-  ctx.fillText(now+' · '+period,16,54);
+  const now=new Date().toLocaleDateString('es-CO',{day:'2-digit',month:'long',year:'numeric'});
+  ctx.font='12px Calibri,Arial'; ctx.fillStyle='rgba(255,255,255,.78)';
+  ctx.fillText(now+' · '+period,16,55);
 
-  // Chart tiles
-  canvases.forEach(function(c,i){
-    const col=i%COLS, row=Math.floor(i/COLS);
-    const x=GAP+col*(cellW+GAP), y=HDR+GAP+row*(cellH+GAP);
-    ctx.fillStyle='#ffffff'; ctx.fillRect(x,y,cellW,cellH);
-    try{ctx.drawImage(c,x+4,y+4,cellW-8,cellH-8);}catch(e){}
+  // ── KPI row ──────────────────────────────────────────────
+  var kpis=[
+    {label:'Despacho',   value:fN(td),     bg:'#e8f0fe',lc:'#5c6bc0',vc:'#1565c0'},
+    {label:'Retorno',    value:fN(tr2),    bg:'#e8f5e9',lc:'#43a047',vc:'#2e7d32'},
+    {label:'% Retorno',  value:fP(pg),     bg:pg>=85?'#e8f5e9':pg>=60?'#fff3e0':'#ffebee',lc:pg>=85?'#43a047':pg>=60?'#ef6c00':'#e53935',vc:pg>=85?'#2e7d32':pg>=60?'#e65100':'#b71c1c'},
+    {label:'Inv. Calle', value:fN(ti),     bg:'#fff3e0',lc:'#ef6c00',vc:'#e65100'},
+    {label:'Activos',    value:fN(activos),bg:'#e3f2fd',lc:'#1e88e5',vc:'#0d47a1'},
+    {label:'Críticos',   value:fN(crit),   bg:crit>0?'#ffebee':'#e8f5e9',lc:crit>0?'#e53935':'#43a047',vc:crit>0?'#b71c1c':'#2e7d32'}
+  ];
+  var kpiCount=kpis.length;
+  var kpiBoxW=Math.floor((W-GAP*(kpiCount+1))/kpiCount);
+  var kpiBoxH=KPI_H-GAP*2;
+  kpis.forEach(function(k,i){
+    var bx=GAP+i*(kpiBoxW+GAP), by=HDR+GAP;
+    ctx.fillStyle=k.bg; ctx.fillRect(bx,by,kpiBoxW,kpiBoxH);
+    ctx.fillStyle=k.lc; ctx.font='bold 9px Calibri,Arial'; ctx.textBaseline='top';
+    ctx.fillText(k.label.toUpperCase(),bx+7,by+8);
+    ctx.fillStyle=k.vc; ctx.font='bold 22px Calibri,Arial'; ctx.textBaseline='alphabetic';
+    ctx.fillText(k.value,bx+7,by+kpiBoxH-10);
+  });
+
+  // ── Charts + top5 grid ───────────────────────────────────
+  var gridY=HDR+KPI_H;
+  allCells.forEach(function(cell,i){
+    var col=i%COLS, row=Math.floor(i/COLS);
+    var x=GAP+col*(cellW+GAP), y=gridY+GAP+row*(cellH+GAP);
+    ctx.fillStyle='#fff'; ctx.fillRect(x,y,cellW,cellH);
+    if(cell==='top5'){
+      _drawTop5Canvas(ctx,x,y,cellW,cellH,topCan,topClis);
+    } else {
+      try{ctx.drawImage(cell,x+4,y+4,cellW-8,cellH-8);}catch(e){}
+    }
   });
 
   oc.toBlob(function(blob){
     cb(blob?new File([blob],'SIGAC_Dashboard.png',{type:'image/png'}):null);
   },'image/png');
+}
+
+function _drawTop5Canvas(ctx,x,y,w,h,topCan,topClis){
+  var PAD=8,HROW=19,DROW=16;
+  var cy=y+PAD;
+
+  // ── Top Canales ──
+  ctx.fillStyle='#003a9e'; ctx.font='bold 11px Calibri,Arial'; ctx.textBaseline='alphabetic';
+  ctx.fillText('Top Canales — Despacho · Retorno · Inventario',x+PAD,cy+12); cy+=18;
+  ctx.fillStyle='#003a9e'; ctx.fillRect(x,cy,w,HROW);
+  ctx.fillStyle='#fff'; ctx.font='bold 9px Calibri,Arial';
+  var cFracs=[0.32,0.17,0.17,0.16,0.18];
+  var cHdrs=['Canal','Desp.','Retorno','%Ret','Inv.Calle'];
+  var cx2=x+PAD;
+  cHdrs.forEach(function(h2,i){ctx.fillText(h2,cx2,cy+HROW-5);cx2+=Math.floor(cFracs[i]*w);});
+  cy+=HROW;
+  topCan.forEach(function(c,ri){
+    if(cy+DROW>y+h*0.54)return;
+    ctx.fillStyle=ri%2?'#f0f6ff':'#fff'; ctx.fillRect(x,cy,w,DROW);
+    var pCol=c.pct>=85?'#2e7d32':c.pct>=60?'#e65100':'#b71c1c';
+    var cx3=x+PAD;
+    var vals=[c.canal.substring(0,13),fN(c.d),fN(c.ret),fP(c.pct),fN(c.inv)];
+    vals.forEach(function(v,ci){
+      ctx.fillStyle=ci===3?pCol:'#222'; ctx.font='10px Calibri,Arial'; ctx.textBaseline='alphabetic';
+      ctx.fillText(v,cx3,cy+DROW-4);
+      cx3+=Math.floor(cFracs[ci]*w);
+    });
+    cy+=DROW;
+  });
+  cy+=PAD;
+
+  // ── Top Prioridades ──
+  if(topClis.length&&cy+18+(DROW+HROW)*1<y+h-PAD){
+    ctx.fillStyle='#b71c1c'; ctx.font='bold 11px Calibri,Arial'; ctx.textBaseline='alphabetic';
+    ctx.fillText('⚠ Prioridades de Recogida',x+PAD,cy+12); cy+=18;
+    ctx.fillStyle='#b71c1c'; ctx.fillRect(x,cy,w,HROW);
+    ctx.fillStyle='#fff'; ctx.font='bold 9px Calibri,Arial';
+    var pFracs=[0.38,0.18,0.16,0.28];
+    var pHdrs=['Cliente','Canal','%Ret','Inventario'];
+    var cx4=x+PAD;
+    pHdrs.forEach(function(h2,i){ctx.fillText(h2,cx4,cy+HROW-5);cx4+=Math.floor(pFracs[i]*w);});
+    cy+=HROW;
+    topClis.forEach(function(c,ri){
+      if(cy+DROW>y+h-PAD)return;
+      ctx.fillStyle=ri%2?'#fff9f9':'#fff'; ctx.fillRect(x,cy,w,DROW);
+      var pCol=c.pct<40?'#b71c1c':c.pct<65?'#e65100':'#2e7d32';
+      var cx5=x+PAD;
+      var vals2=[c.cli.substring(0,17),c.canal.substring(0,7),fP(c.pct),fN(c.inv)];
+      vals2.forEach(function(v,ci){
+        ctx.fillStyle=ci===2?pCol:'#222'; ctx.font='10px Calibri,Arial'; ctx.textBaseline='alphabetic';
+        ctx.fillText(v,cx5,cy+DROW-4);
+        cx5+=Math.floor(pFracs[ci]*w);
+      });
+      cy+=DROW;
+    });
+  }
 }
 
 function _waDownloadAndOpen(imgFile,msg){
