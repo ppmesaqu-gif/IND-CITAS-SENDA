@@ -1724,7 +1724,16 @@ ${EMAIL_HTML}`;
 function openMailto(){
   const to=document.getElementById('em-to').value||'';
   const subject=encodeURIComponent(document.getElementById('em-subject').value||'SIGAC Informe');
-  window.open(`mailto:${to}?subject=${subject}&body=Ver adjunto HTML`,'_blank');
+  const href=location.href;
+  const body=encodeURIComponent(
+    'Hola,\n\n'
+    +'Adjunto el informe SIGAC de cubetas Alpina.\n\n'
+    +'Para visualizar el informe directamente en Chrome, haz clic en el siguiente enlace '
+    +'(o cópialo y pégalo en la barra de direcciones):\n\n'
+    +href+'\n\n'
+    +'---\nSIGAC · Sistema de Gestión de Activos en Clientes · Alpina'
+  );
+  window.open(`mailto:${to}?subject=${subject}&body=${body}`,'_blank');
 }
 
 function shareWhatsApp(){
