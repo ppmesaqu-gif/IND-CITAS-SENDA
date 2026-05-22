@@ -153,6 +153,10 @@ thead th.num{text-align:right}
 .dm-kl{font-size:10px;color:var(--t3);font-weight:500;margin-bottom:2px}
 .dm-kv{font-size:20px;font-weight:700}
 .dm-ks{font-size:10px;color:var(--t3);margin-top:1px}
+/* Detail filters */
+.dm-flt{display:flex;align-items:center;gap:6px;padding:8px 0 6px;flex-wrap:wrap;border-bottom:1px solid var(--br);margin-bottom:6px}
+.dm-flt select,.dm-flt input[type=text]{padding:4px 8px;border:1px solid var(--br);border-radius:6px;font-size:12px;color:var(--tx);background:var(--wh);height:28px}
+.dm-flt .fl{font-size:11px;font-weight:600;color:var(--t3)}
 /* Balance line */
 .balance-neg td:nth-child(11){color:var(--red);font-weight:700}
 /* Prio */
@@ -392,6 +396,16 @@ thead th.num{text-align:right}
     </div>
     <div class="card" style="margin-bottom:0">
       <div class="ct2">Todos los Movimientos <span class="meta" id="dm-mov-count">–</span></div>
+      <div class="dm-flt">
+        <span class="fl">Filtrar:</span>
+        <select id="dm-fy" onchange="renderDMTable()"><option value="">Año</option></select>
+        <select id="dm-fm2" onchange="renderDMTable()"><option value="">Mes</option></select>
+        <select id="dm-fp" onchange="renderDMTable()"><option value="">Placa</option></select>
+        <select id="dm-fcd" onchange="renderDMTable()"><option value="">Conductor</option></select>
+        <input type="text" id="dm-fq" placeholder="Buscar fecha, hoja…" style="width:148px" oninput="renderDMTable()">
+        <button class="btn btn-g btn-sm" onclick="clearDMFilter()"><i class="ti ti-filter-off"></i> Limpiar</button>
+        <span class="meta" id="dm-flt-info"></span>
+      </div>
       <div class="tw"><table id="tbl-dm"><thead><tr>
         <th>Fecha</th><th>Mes</th><th>Hoja</th><th>Conductor</th><th>Placa</th>
         <th class="num">CUB001 D</th><th class="num">CUB001 R</th>
@@ -417,7 +431,8 @@ const CN={MM:'Mini Mercado',SP:'Supermercado',TR:'Tradicional',DR:'Droguería',S
 const CC={'MM':'#2563eb','SP':'#7c3aed','TR':'#ea580c','DR':'#db2777','SI':'#059669','IS':'#d97706','ALT':'#0891b2','DS':'#65a30d','EC':'#9f1239','MV':'#4338ca'};
 const PA=['#2563eb','#7c3aed','#ea580c','#db2777','#059669','#d97706','#0891b2','#65a30d','#9f1239','#4338ca','#0f766e','#b45309'];
 // ── STATE ──────────────────────────────────────────────────────────────────
-let RAW=[],FILES=[],CHS={},VIEW='resumen',DMcod=null;function resetLoad(){RAW=[];FILES=[];CHS={};VIEW='resumen';DMcod=null;}
+let RAW=[],FILES=[],CHS={},VIEW='resumen',DMcod=null,DM_ROWS=[],DM_BAL=[];
+function resetLoad(){RAW=[];FILES=[];CHS={};VIEW='resumen';DMcod=null;DM_ROWS=[];DM_BAL=[];}
 // ── UTILS ──────────────────────────────────────────────────────────────────
 const xl2d=s=>{if(!s||isNaN(s))return null;const d=new Date(Date.UTC(1899,11,30)+Number(s)*86400000);return isNaN(d.getTime())?null:d;};
 const fmtD=d=>d?d.toLocaleDateString('es-CO',{day:'2-digit',month:'2-digit',year:'numeric'}):'–';
@@ -1040,55 +1055,86 @@ function filtrarAnom(cod){nav('anomalias',document.querySelector('.ni:last-child
 // ── DETAIL MODAL ───────────────────────────────────────────────────────────
 function openDetail(cod){
   DMcod=cod;
-  const allRows=RAW.filter(r=>r.cod===cod).sort((a,b)=>(a.fecha||0)-(b.fecha||0));
-  if(!allRows.length){alert('Sin datos para este cliente.');return;}
-  const info=allRows[allRows.length-1];
-  document.getElementById('dm-title').textContent=info.cli||cod;
-  document.getElementById('dm-sub').textContent=`Código: ${cod} · Canal: ${info.canal} · ${CN[info.canal]||''} · ${allRows.length} registros`;
+  DM_ROWS=RAW.filter(r=>r.cod===cod).sort((a,b)=>(a.fecha||0)-(b.fecha||0));
+  if(!DM_ROWS.length){alert('Sin datos para este cliente.');return;}
 
-  // Aggregate
-  const td=allRows.reduce((s,r)=>s+r.d,0),tr=allRows.reduce((s,r)=>s+r.ret,0);
-  let bal=0,maxBal=0,minBal=0;
-  const balLine=allRows.map(r=>{bal+=r.d1+r.d2+r.d3;maxBal=Math.max(maxBal,bal);minBal=Math.min(minBal,bal);return bal;});
+  // Pre-compute cumulative balance over ALL rows (never distorted by filters)
+  let _bal=0;
+  DM_BAL=DM_ROWS.map(r=>{_bal+=r.d1+r.d2+r.d3;return _bal;});
+
+  const info=DM_ROWS[DM_ROWS.length-1];
+  document.getElementById('dm-title').textContent=info.cli||cod;
+  document.getElementById('dm-sub').textContent=`Código: ${cod} · Canal: ${info.canal} · ${CN[info.canal]||''} · ${DM_ROWS.length} registros`;
+
+  // KPIs (always over all rows)
+  const td=DM_ROWS.reduce((s,r)=>s+r.d,0),tr=DM_ROWS.reduce((s,r)=>s+r.ret,0);
   const pg=pct(tr,td);
   const anoms=ANOMALIES.filter(a=>a.cod===cod).length;
-  const dates=allRows.map(r=>r.fecha).filter(Boolean).sort((a,b)=>a-b);
+  const dates=DM_ROWS.map(r=>r.fecha).filter(Boolean).sort((a,b)=>a-b);
+  const lastBal=DM_BAL[DM_BAL.length-1]||0;
 
   document.getElementById('dm-kpi').innerHTML=`
     <div class="dm-kc"><div class="dm-kl">Despacho Total</div><div class="dm-kv" style="color:#2563eb">${fN(td)}</div><div class="dm-ks">cubetas enviadas</div></div>
     <div class="dm-kc"><div class="dm-kl">Retorno Total</div><div class="dm-kv" style="color:#10b981">${fN(tr)}</div><div class="dm-ks">cubetas recibidas</div></div>
     <div class="dm-kc"><div class="dm-kl">% Retorno</div><div class="dm-kv" style="color:${pc(pg)}">${fP(pg)}</div></div>
-    <div class="dm-kc"><div class="dm-kl">Inv. Actual</div><div class="dm-kv" style="color:${balLine[balLine.length-1]>0?'#d97706':'#10b981'}">${fN(balLine[balLine.length-1]||0)}</div><div class="dm-ks">cubetas en calle</div></div>
+    <div class="dm-kc"><div class="dm-kl">Inv. Actual</div><div class="dm-kv" style="color:${lastBal>0?'#d97706':'#10b981'}">${fN(lastBal)}</div><div class="dm-ks">cubetas en calle</div></div>
     <div class="dm-kc"><div class="dm-kl">Anomalías</div><div class="dm-kv" style="color:${anoms>0?'#ef4444':'#10b981'}">${anoms}</div><div class="dm-ks">registros con alertas</div></div>
     <div class="dm-kc"><div class="dm-kl">Período</div><div class="dm-kv" style="font-size:12px">${dates.length?fmtD(dates[0]):'–'}</div><div class="dm-ks">${dates.length>1?'→ '+fmtD(dates[dates.length-1]):''}</div></div>`;
 
-  // Timeline chart
-  const tlLabs=allRows.map(r=>r.fecha?r.fecha.toLocaleDateString('es-CO',{day:'2-digit',month:'2-digit'}):r.mn||'?');
+  // Charts (always over all rows)
+  const tlLabs=DM_ROWS.map(r=>r.fecha?r.fecha.toLocaleDateString('es-CO',{day:'2-digit',month:'2-digit'}):r.mn||'?');
   dC('ch-dm-tl');CHS['ch-dm-tl']=new Chart(document.getElementById('ch-dm-tl'),{
     type:'bar',data:{labels:tlLabs,datasets:[
-      {label:'Despacho',data:allRows.map(r=>r.d),backgroundColor:'rgba(37,99,235,.7)'},
-      {label:'Retorno',data:allRows.map(r=>r.ret),backgroundColor:'rgba(16,185,129,.7)'}
+      {label:'Despacho',data:DM_ROWS.map(r=>r.d),backgroundColor:'rgba(37,99,235,.7)'},
+      {label:'Retorno',data:DM_ROWS.map(r=>r.ret),backgroundColor:'rgba(16,185,129,.7)'}
     ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{mode:'index'}},scales:{x:{grid:{display:false},ticks:{font:{size:9},maxRotation:90,maxTicksLimit:20}},y:{grid:{color:gridColor},ticks:{font:{size:10}}}}}
   });
-
-  // Balance chart
   dC('ch-dm-bal');CHS['ch-dm-bal']=new Chart(document.getElementById('ch-dm-bal'),{
-    type:'line',data:{labels:tlLabs,datasets:[{label:'Balance',data:balLine,borderColor:'#f59e0b',backgroundColor:balLine.map(b=>b<0?'rgba(239,68,68,.15)':'rgba(245,158,11,.12)'),fill:true,tension:.3,pointRadius:2,borderWidth:2,pointBackgroundColor:balLine.map(b=>b<0?'#ef4444':'#f59e0b')}]},
+    type:'line',data:{labels:tlLabs,datasets:[{label:'Balance',data:DM_BAL,borderColor:'#f59e0b',backgroundColor:DM_BAL.map(b=>b<0?'rgba(239,68,68,.15)':'rgba(245,158,11,.12)'),fill:true,tension:.3,pointRadius:2,borderWidth:2,pointBackgroundColor:DM_BAL.map(b=>b<0?'#ef4444':'#f59e0b')}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:9},maxRotation:90,maxTicksLimit:20}},y:{grid:{color:gridColor},ticks:{font:{size:10}}}}}
   });
 
-  // Movement table
-  document.getElementById('dm-mov-count').textContent=`${allRows.length} registros`;
-  const anomMap=new Map(ANOMALIES.filter(a=>a.cod===cod).map(a=>[`${a.ym}|${a.d}|${a.ret}`,a]));
-  let runBal2=0;
-  document.querySelector('#tbl-dm tbody').innerHTML=allRows.map((r,i)=>{
-    runBal2+=r.d1+r.d2+r.d3;
+  // Populate filter dropdowns
+  const uniq=(arr)=>[...new Set(arr.filter(Boolean))];
+  const mkOpts=(id,arr,lbl)=>{const el=document.getElementById(id);el.innerHTML=`<option value="">${lbl}</option>`;arr.forEach(v=>el.insertAdjacentHTML('beforeend',`<option value="${v}">${v}</option>`));};
+  mkOpts('dm-fy', uniq(DM_ROWS.map(r=>r.yr)).sort(), 'Año');
+  mkOpts('dm-fm2', uniq(DM_ROWS.map(r=>r.mn)).sort((a,b)=>MO.indexOf(a)-MO.indexOf(b)), 'Mes');
+  mkOpts('dm-fp', uniq(DM_ROWS.map(r=>r.placa)).sort(), 'Placa');
+  mkOpts('dm-fcd', uniq(DM_ROWS.map(r=>r.conductor)).sort(), 'Conductor');
+  document.getElementById('dm-fq').value='';
+
+  renderDMTable();
+  document.getElementById('dm').classList.add('show');
+}
+
+function renderDMTable(){
+  if(!DMcod||!DM_ROWS.length) return;
+  const yr=document.getElementById('dm-fy').value;
+  const mn=document.getElementById('dm-fm2').value;
+  const pl=document.getElementById('dm-fp').value;
+  const cd=document.getElementById('dm-fcd').value;
+  const q=(document.getElementById('dm-fq').value||'').trim().toLowerCase();
+
+  const anomMap=new Map(ANOMALIES.filter(a=>a.cod===DMcod).map(a=>[`${a.ym}|${a.d}|${a.ret}`,a]));
+
+  let count=0;
+  const html=DM_ROWS.map((r,i)=>{
+    const b=DM_BAL[i];
+    if(yr&&String(r.yr)!==yr) return '';
+    if(mn&&r.mn!==mn) return '';
+    if(pl&&r.placa!==pl) return '';
+    if(cd&&r.conductor!==cd) return '';
+    if(q){
+      const haystack=(fmtD(r.fecha)+' '+(r.sheet||'')+' '+(r.conductor||'')+' '+(r.placa||'')).toLowerCase();
+      if(!haystack.includes(q)) return '';
+    }
+    count++;
     const aKey=`${r.ym}|${r.d}|${r.ret}`;
     const anom=anomMap.get(aKey);
     let cls='';
     if(anom){cls=anom.maxSev>=3?'tr-error':anom.maxSev>=2?'tr-warn':'tr-dup';}
     const alertTags=anom?anom.alerts.map(a=>`<span class="err-badge ${{'DUPLICADO':'err-dup','BAL.NEGATIVO':'err-bal','OUTLIER D.':'err-out','RET.EXCESIVO':'err-ret'}[a.type]||'err-miss'}">${a.type}</span>`).join(' '):'';
-    const balStyle=runBal2<0?'color:#dc2626;font-weight:700':runBal2>100?'color:#d97706;font-weight:600':'';
+    const balStyle=b<0?'color:#dc2626;font-weight:700':b>100?'color:#d97706;font-weight:600':'';
     return`<tr class="${cls}">
       <td style="font-size:11px;font-weight:500">${fmtD(r.fecha)}</td>
       <td style="font-size:10px">${r.mn||'–'}</td>
@@ -1102,12 +1148,21 @@ function openDetail(cod){
       <td class="num" style="color:#2563eb">${r.cCaj||0}</td><td class="num" style="color:#10b981">${r.rCaj||0}</td>
       <td class="num" style="font-weight:600;color:#2563eb">${fN(r.d)}</td>
       <td class="num" style="font-weight:600;color:#10b981">${fN(r.ret)}</td>
-      <td class="num" style="${balStyle}">${fN(runBal2)}</td>
+      <td class="num" style="${balStyle}">${fN(b)}</td>
       <td>${alertTags}</td>
     </tr>`;
   }).join('');
 
-  document.getElementById('dm').classList.add('show');
+  document.querySelector('#tbl-dm tbody').innerHTML=html;
+  document.getElementById('dm-mov-count').textContent=`${count} registros`;
+  const hidden=DM_ROWS.length-count;
+  document.getElementById('dm-flt-info').textContent=hidden>0?`(${hidden} ocultos por filtro)`:'';
+}
+
+function clearDMFilter(){
+  ['dm-fy','dm-fm2','dm-fp','dm-fcd'].forEach(id=>{document.getElementById(id).value='';});
+  document.getElementById('dm-fq').value='';
+  renderDMTable();
 }
 
 function closeDM(){document.getElementById('dm').classList.remove('show');dC('ch-dm-tl');dC('ch-dm-bal');}
@@ -1146,11 +1201,28 @@ function exportRecogida(){
 }
 
 function exportMovCSV(){
-  if(!DMcod)return;
-  const rows=RAW.filter(r=>r.cod===DMcod).sort((a,b)=>(a.fecha||0)-(b.fecha||0));
-  const h='Fecha,Año,Mes,Conductor,Placa,CUB001_D,CUB001_R,CUB002_D,CUB002_R,CUB003_D,CUB003_R,Despacho,Retorno,Hoja';
-  const lines=[h,...rows.map(r=>[r.fecha?r.fecha.toISOString().split('T')[0]:'',r.yr||'',r.mn||'',`"${r.conductor}"`,r.placa,r.c1,r.r1,r.c2,r.r2,r.c3,r.r3,r.d,r.ret,`"${r.sheet}"`].join(','))];
-  dl(lines.join('\n'),`movimientos_${DMcod}.csv`,'text/csv');
+  if(!DMcod||!DM_ROWS.length)return;
+  const yr=document.getElementById('dm-fy').value;
+  const mn=document.getElementById('dm-fm2').value;
+  const pl=document.getElementById('dm-fp').value;
+  const cd=document.getElementById('dm-fcd').value;
+  const q=(document.getElementById('dm-fq').value||'').trim().toLowerCase();
+  const rows=DM_ROWS.filter((r,i)=>{
+    if(yr&&String(r.yr)!==yr)return false;
+    if(mn&&r.mn!==mn)return false;
+    if(pl&&r.placa!==pl)return false;
+    if(cd&&r.conductor!==cd)return false;
+    if(q){const hay=(fmtD(r.fecha)+' '+(r.sheet||'')+' '+(r.conductor||'')+' '+(r.placa||'')).toLowerCase();if(!hay.includes(q))return false;}
+    return true;
+  });
+  const h='Fecha,Año,Mes,Conductor,Placa,CUB001_D,CUB001_R,CUB002_D,CUB002_R,CUB003_D,CUB003_R,EST003_D,EST003_R,CAJAS_D,CAJAS_R,Despacho,Retorno,Balance,Hoja';
+  let bal=0;
+  const lines=[h,...rows.map((r,i)=>{
+    bal=DM_BAL[DM_ROWS.indexOf(r)];
+    return[r.fecha?r.fecha.toISOString().split('T')[0]:'',r.yr||'',r.mn||'',`"${r.conductor||''}"`,r.placa||'',r.c1||0,r.r1||0,r.c2||0,r.r2||0,r.c3||0,r.r3||0,r.cEst||0,r.rEst||0,r.cCaj||0,r.rCaj||0,r.d,r.ret,bal,`"${r.sheet||''}"`].join(',');
+  })];
+  const suffix=yr||mn||pl||cd||q?'_filtrado':'';
+  dl(lines.join('\n'),`movimientos_${DMcod}${suffix}.csv`,'text/csv');
 }
 </script>
 
