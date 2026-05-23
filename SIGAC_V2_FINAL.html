@@ -154,6 +154,8 @@ thead th.num{text-align:right}
 .dm-kv{font-size:20px;font-weight:700}
 .dm-ks{font-size:10px;color:var(--t3);margin-top:1px}
 /* Detail filters */
+#ctr-wrapper{display:block}
+#ctr-wrapper.pair{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp);margin-bottom:var(--sp)}
 .dm-flt{display:flex;align-items:center;gap:6px;padding:8px 0 6px;flex-wrap:wrap;border-bottom:1px solid var(--br);margin-bottom:6px}
 .dm-flt select,.dm-flt input[type=text]{padding:4px 8px;border:1px solid var(--br);border-radius:6px;font-size:12px;color:var(--tx);background:var(--wh);height:28px}
 .dm-flt .fl{font-size:11px;font-weight:600;color:var(--t3)}
@@ -324,10 +326,13 @@ thead th.num{text-align:right}
     <!-- CANAL -->
     <div id="vw-canal" class="vw">
       <div class="al2 al-i"><i class="ti ti-info-circle"></i><div>Haz clic en cualquier barra o punto del gráfico para filtrar y ver el detalle. Selecciona un canal en el filtro superior para ver su evolución y clientes.</div></div>
-      <div class="card"><div class="ct2">Evolución mensual por Canal <span class="meta" id="canal-p">clic en línea → clientes del canal</span></div><div class="cw" style="height:260px"><canvas id="ch-ctr" role="img" aria-label="Evolucion canal">–</canvas></div></div>
+      <div id="ctr-wrapper">
+        <div class="card"><div class="ct2" id="ctr-title">Evolución mensual por Canal <span class="meta" id="canal-p">clic en línea → clientes del canal</span></div><div class="cw" style="height:260px"><canvas id="ch-ctr" role="img" aria-label="Evolucion canal">–</canvas></div></div>
+        <div class="card" id="ctr-card2" style="display:none"><div class="ct2" id="ctr-title2">Tipos de Cubeta</div><div class="cw" style="height:260px"><canvas id="ch-ctr2" role="img" aria-label="Cubeta tipos">–</canvas></div></div>
+      </div>
       <div class="g2">
-        <div class="card"><div class="ct2">% Retorno por Canal <span class="meta">clic para filtrar</span></div><div class="cw" style="height:200px"><canvas id="ch-cpct" role="img" aria-label="Porcentaje retorno canal">–</canvas></div></div>
-        <div class="card"><div class="ct2">Inventario en calle por Canal</div><div class="cw" style="height:200px"><canvas id="ch-cinv" role="img" aria-label="Inventario canal">–</canvas></div></div>
+        <div class="card"><div class="ct2" id="cpct-title">% Retorno por Canal <span class="meta" id="cpct-meta">clic para filtrar</span></div><div class="cw" style="height:200px"><canvas id="ch-cpct" role="img" aria-label="Porcentaje retorno canal">–</canvas></div></div>
+        <div class="card"><div class="ct2" id="cinv-title">Inventario en calle por Canal</div><div class="cw" style="height:200px"><canvas id="ch-cinv" role="img" aria-label="Inventario canal">–</canvas></div></div>
       </div>
       <div class="card"><div class="ct2">Clientes por Canal <span class="meta" id="canal-cli-count">clic en fila → movimientos</span></div>
         <div class="tw"><table id="tbl-cc"><thead><tr><th>#</th><th>Cliente</th><th>Canal</th><th class="num">Despacho</th><th class="num">Retorno</th><th class="num">% Retorno</th><th class="num">Inventario</th><th>Último</th></tr></thead><tbody></tbody></table></div>
@@ -881,26 +886,77 @@ function rFechas(rows){
 
 // ── RENDER: CANAL ──────────────────────────────────────────────────────────
 function rCanal(rows){
+  const f=gF();
   const cd=aggCanal(rows),md=aggYM(rows),labs=md.map(m=>m.label);
-  const canals=[...new Set(rows.map(r=>r.canal))].filter(Boolean);
-  document.getElementById('canal-p').textContent=`${cd.length} canales · clic en punto → detalle`;
-  const cByYM={};
-  canals.forEach(c=>{cByYM[c]={};md.forEach(m=>{cByYM[c][m.ym]=0;});});
-  rows.forEach(r=>{if(r.ym&&cByYM[r.canal])cByYM[r.canal][r.ym]=(cByYM[r.canal][r.ym]||0)+r.d;});
-
-  mkChart('ch-ctr',{type:'line',data:{labels:labs,datasets:canals.map((c,i)=>({label:c,data:md.map(m=>cByYM[c][m.ym]||0),borderColor:CC[c]||PA[i%PA.length],backgroundColor:'transparent',tension:.3,pointRadius:3,borderWidth:2}))},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10},boxWidth:12}}},scales:{...baseScales},
-    onClick:(evt,els)=>{if(els.length>0){const cl=canals[els[0].datasetIndex];if(cl){document.getElementById('fc').value=cl;refresh();}}}}});
-
-  const cpts=cd.map(c=>parseFloat(c.pct.toFixed(1)));
-  mkChart('ch-cpct',{type:'bar',data:{labels:cd.map(c=>c.canal),datasets:[{label:'%',data:cpts,backgroundColor:cpts.map(p=>pb(p))}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{min:0,max:110,ticks:{callback:v=>v+'%',font:{size:10}},grid:{color:gridColor}}},
-    onClick:(evt,els)=>{if(els.length>0)onClickCanal(cd[els[0].index].canal);}}});
-
-  mkChart('ch-cinv',{type:'bar',data:{labels:cd.map(c=>c.canal),datasets:[{label:'Inv',data:cd.map(c=>Math.round(c.inv)),backgroundColor:cd.map(c=>c.inv>0?'rgba(245,158,11,.8)':'rgba(16,185,129,.8)')}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{grid:{color:gridColor},ticks:{font:{size:10}}}}}});
-
   const clisAll=aggCli(rows).filter(c=>c.d>0);
+  const wrapper=document.getElementById('ctr-wrapper');
+  const card2=document.getElementById('ctr-card2');
+
+  if(f.cn){
+    // Canal filtrado: mostrar gráficas por cliente
+    wrapper.classList.add('pair'); card2.style.display='';
+
+    // Gráfica 1: Visitas por Mes — Top 10 Clientes (línea)
+    const top10=clisAll.slice().sort((a,b)=>b.d-a.d).slice(0,10);
+    const visMap={};
+    top10.forEach(c=>{visMap[c.cod]={};md.forEach(m=>{visMap[c.cod][m.ym]=0;});});
+    rows.forEach(r=>{if(visMap[r.cod]&&r.ym)visMap[r.cod][r.ym]=(visMap[r.cod][r.ym]||0)+1;});
+    document.getElementById('ctr-title').innerHTML='Visitas por Mes — Top 10 Clientes <span class="meta" id="canal-p">'+f.cn+'</span>';
+    mkChart('ch-ctr',{type:'line',data:{labels:labs,datasets:top10.map((c,i)=>({label:c.cli.substring(0,20),data:md.map(m=>visMap[c.cod][m.ym]||0),borderColor:PA[i%PA.length],backgroundColor:'transparent',tension:.3,pointRadius:3,borderWidth:2}))},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:9},boxWidth:10}}},scales:{...baseScales},
+      onClick:(evt,els)=>{if(els.length>0)openDetail(top10[els[0].datasetIndex].cod);}}});
+
+    // Gráfica 2: Tipos Cubeta Despacho vs Retorno (barras agrupadas)
+    const tipos=['C1','C2','C3','Estibas','Cajas'];
+    const totD=[rows.reduce((s,r)=>s+r.c1,0),rows.reduce((s,r)=>s+r.c2,0),rows.reduce((s,r)=>s+r.c3,0),rows.reduce((s,r)=>s+(r.cEst||0),0),rows.reduce((s,r)=>s+(r.cCaj||0),0)];
+    const totR=[rows.reduce((s,r)=>s+r.r1,0),rows.reduce((s,r)=>s+r.r2,0),rows.reduce((s,r)=>s+r.r3,0),rows.reduce((s,r)=>s+(r.rEst||0),0),rows.reduce((s,r)=>s+(r.rCaj||0),0)];
+    document.getElementById('ctr-title2').textContent='Tipos de Cubeta — Despacho vs Retorno';
+    mkChart('ch-ctr2',{type:'bar',data:{labels:tipos,datasets:[
+      {label:'Despacho',data:totD,backgroundColor:'rgba(37,99,235,.75)'},
+      {label:'Retorno',data:totR,backgroundColor:'rgba(16,185,129,.75)'}
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10},boxWidth:12}}},scales:{...baseScales}}});
+
+    // ch-cpct: Top 5 mejor retorno + 5 peor retorno (barras horizontales bicolor)
+    const clisByPct=clisAll.slice().sort((a,b)=>b.pct-a.pct);
+    const best5=clisByPct.slice(0,5);
+    const worst5=clisByPct.length>5?clisByPct.slice(-5).reverse():[];
+    const cpctData=[...best5,...worst5];
+    const cpctLabels=cpctData.map(c=>c.cli.substring(0,22));
+    const cpctVals=cpctData.map(c=>parseFloat(c.pct.toFixed(1)));
+    const cpctColors=[...best5.map(()=>'rgba(16,185,129,.8)'),...worst5.map(()=>'rgba(239,68,68,.8)')];
+    document.getElementById('cpct-title').innerHTML='% Retorno por Cliente <span class="meta">Top 5 mejor · peor</span>';
+    mkChart('ch-cpct',{type:'bar',indexAxis:'y',data:{labels:cpctLabels,datasets:[{label:'%',data:cpctVals,backgroundColor:cpctColors}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{min:0,max:110,ticks:{callback:v=>v+'%',font:{size:10}},grid:{color:gridColor}},y:{grid:{display:false},ticks:{font:{size:9}}}},
+      onClick:(evt,els)=>{if(els.length>0)openDetail(cpctData[els[0].index].cod);}}});
+
+    // ch-cinv: Top 10 clientes por inventario en calle (barras horizontales)
+    const top10inv=clisAll.filter(c=>c.inv>0).sort((a,b)=>b.inv-a.inv).slice(0,10);
+    document.getElementById('cinv-title').textContent='Inventario en calle — Top 10 Clientes';
+    mkChart('ch-cinv',{type:'bar',indexAxis:'y',data:{labels:top10inv.map(c=>c.cli.substring(0,22)),datasets:[{label:'Inv',data:top10inv.map(c=>Math.round(c.inv)),backgroundColor:top10inv.map(c=>c.pct<50?'rgba(239,68,68,.8)':c.pct<75?'rgba(245,158,11,.8)':'rgba(37,99,235,.7)')}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:gridColor},ticks:{font:{size:10}}},y:{grid:{display:false},ticks:{font:{size:9}}}},
+      onClick:(evt,els)=>{if(els.length>0)openDetail(top10inv[els[0].index].cod);}}});
+
+  } else {
+    // Sin filtro de canal: gráficas originales por canal
+    wrapper.classList.remove('pair'); card2.style.display='none'; dC('ch-ctr2');
+    const canals=[...new Set(rows.map(r=>r.canal))].filter(Boolean);
+    document.getElementById('ctr-title').innerHTML='Evolución mensual por Canal <span class="meta" id="canal-p">'+cd.length+' canales · clic en línea → canal</span>';
+    document.getElementById('cpct-title').innerHTML='% Retorno por Canal <span class="meta" id="cpct-meta">clic para filtrar</span>';
+    document.getElementById('cinv-title').textContent='Inventario en calle por Canal';
+    const cByYM={};
+    canals.forEach(c=>{cByYM[c]={};md.forEach(m=>{cByYM[c][m.ym]=0;});});
+    rows.forEach(r=>{if(r.ym&&cByYM[r.canal])cByYM[r.canal][r.ym]=(cByYM[r.canal][r.ym]||0)+r.d;});
+    mkChart('ch-ctr',{type:'line',data:{labels:labs,datasets:canals.map((c,i)=>({label:c,data:md.map(m=>cByYM[c][m.ym]||0),borderColor:CC[c]||PA[i%PA.length],backgroundColor:'transparent',tension:.3,pointRadius:3,borderWidth:2}))},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10},boxWidth:12}}},scales:{...baseScales},
+      onClick:(evt,els)=>{if(els.length>0){const cl=canals[els[0].datasetIndex];if(cl){document.getElementById('fc').value=cl;refresh();}}}}});
+    const cpts=cd.map(c=>parseFloat(c.pct.toFixed(1)));
+    mkChart('ch-cpct',{type:'bar',data:{labels:cd.map(c=>c.canal),datasets:[{label:'%',data:cpts,backgroundColor:cpts.map(p=>pb(p))}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{min:0,max:110,ticks:{callback:v=>v+'%',font:{size:10}},grid:{color:gridColor}}},
+      onClick:(evt,els)=>{if(els.length>0)onClickCanal(cd[els[0].index].canal);}}});
+    mkChart('ch-cinv',{type:'bar',data:{labels:cd.map(c=>c.canal),datasets:[{label:'Inv',data:cd.map(c=>Math.round(c.inv)),backgroundColor:cd.map(c=>c.inv>0?'rgba(245,158,11,.8)':'rgba(16,185,129,.8)')}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{grid:{color:gridColor},ticks:{font:{size:10}}}}}});
+  }
+
   const clisSorted=sortByCrit(clisAll);
   const clisShow=EXPAND_STATE['cc']?clisSorted:clisSorted.slice(0,10);
   document.getElementById('canal-cli-count').textContent=`${clisAll.length} clientes · top 10 más críticos · clic en fila → movimientos`;
@@ -1879,7 +1935,7 @@ function captureViewImage(cb){
   const viewCharts={
     resumen:['ch-rt','ch-rc'],
     fechas:['ch-fm','ch-fp','ch-fi'],
-    canal:['ch-ctr','ch-cpct','ch-cinv'],
+    canal:gF().cn?['ch-ctr','ch-ctr2','ch-cpct','ch-cinv']:['ch-ctr','ch-cpct','ch-cinv'],
     clientes:[],
     inventario:['ch-inv'],
     recogida:['ch-rec'],
