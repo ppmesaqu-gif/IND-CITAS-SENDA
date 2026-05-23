@@ -26,20 +26,20 @@
 }
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;background:var(--bg);color:var(--tx);min-height:100vh}
 /* Upload */
-#su{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem 2rem 2.5rem;gap:1.4rem;background:linear-gradient(145deg,#071430 0%,#0a2260 50%,#0039b8 100%);position:relative;overflow:hidden}
-.dz{background:rgba(255,255,255,.97);border:2px dashed rgba(255,255,255,.3);border-radius:20px;padding:2.5rem 3.5rem;text-align:center;cursor:pointer;transition:all .2s;max-width:480px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,.45);backdrop-filter:blur(10px);position:relative;z-index:2}
-.dz:hover,.dz.drag{border-color:var(--blue);background:#f0f7ff}
+#su{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem 2rem 2.5rem;gap:1.4rem;background:linear-gradient(160deg,#f0f5ff 0%,#e4ecff 55%,#dce8ff 100%);position:relative;overflow:hidden}
+.dz{background:rgba(255,255,255,.97);border:2.5px dashed #b8cef0;border-radius:20px;padding:2.5rem 3.5rem;text-align:center;cursor:pointer;transition:all .2s;max-width:480px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,.45);backdrop-filter:blur(10px);position:relative;z-index:2}
+.dz:hover,.dz.drag{border-color:#0039b8;background:#f5f8ff;box-shadow:0 30px 70px rgba(0,57,184,.25)}
 .dz i{font-size:48px;color:var(--blue);display:block;margin-bottom:.75rem}
 .dz h2{font-size:19px;font-weight:600;margin-bottom:.4rem}
 .dz p{font-size:13px;color:var(--t3);margin-bottom:1.25rem;line-height:1.6}
 .hint{display:none}
 /* Splash redesign */
-.su-hero{z-index:2;text-align:center;color:#fff;margin-bottom:.5rem}
-.su-hero h1{font-size:2rem;font-weight:900;letter-spacing:-1px;margin:0 0 4px;text-shadow:0 2px 12px rgba(0,0,0,.4)}
-.su-hero p{font-size:13px;color:rgba(255,255,255,.7);margin:0;letter-spacing:.3px}
+.su-hero{z-index:2;text-align:center;color:#0a2260;margin-bottom:.5rem}
+.su-hero h1{font-size:2rem;font-weight:900;letter-spacing:-1px;margin:0 0 4px;color:#0a2260}
+.su-hero p{font-size:13px;color:#4a6090;margin:0;letter-spacing:.3px}
 .su-deco{position:absolute;pointer-events:none;user-select:none}
-.alpina-brand{z-index:2;display:flex;align-items:center;gap:12px;color:rgba(255,255,255,.85);font-size:13px;letter-spacing:.3px;margin-top:.3rem;background:rgba(255,255,255,.07);padding:8px 20px;border-radius:50px;backdrop-filter:blur(4px)}
-.alpina-brand img{height:28px;filter:brightness(0) invert(1)}
+.alpina-brand{z-index:2;display:flex;align-items:center;justify-content:center;margin-top:.3rem}
+.alpina-brand svg{height:70px}
 .btn{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .15s}
 .btn-p{background:var(--blue);color:#fff}.btn-p:hover{background:#1d6fd4}
 .btn-g{background:transparent;color:var(--t2);border:1px solid var(--br)}.btn-g:hover{background:#f1f3f5}
@@ -213,12 +213,12 @@ thead th.num{text-align:right}
 <!-- UPLOAD -->
 <div id="su">
   <!-- Decorative cubetas positioned absolutely -->
-  <div class="su-deco" style="top:-30px;left:-50px;transform:rotate(-18deg);opacity:.18"><svg viewBox="0 0 200 160" width="260" height="208" xmlns="http://www.w3.org/2000/svg">
+  <div class="su-deco" style="top:-30px;left:-50px;transform:rotate(-18deg);opacity:.22"><svg viewBox="0 0 200 160" width="260" height="208" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <clipPath id="cf130"><polygon points="18,80 18,142 162,142 162,80"/></clipPath>
     <clipPath id="ct130"><polygon points="18,80 48,48 192,48 162,80"/></clipPath>
   </defs>
-  <polygon points="18,80 18,142 162,142 162,80" fill="#191919"/>
+  <polygon points="18,80 18,142 162,142 162,80" fill="#151515" filter="drop-shadow(0 4px 8px rgba(0,0,0,.3))"/>
   <g clip-path="url(#cf130)">
     <line x1="55" y1="80" x2="55" y2="142" stroke="#2e2e2e" stroke-width="2"/>
     <line x1="92" y1="80" x2="92" y2="142" stroke="#2e2e2e" stroke-width="2"/>
@@ -247,12 +247,12 @@ thead th.num{text-align:right}
   <rect x="55" y="44" width="12" height="6" rx="2" fill="#2a2a2a"/>
   <rect x="153" y="44" width="12" height="6" rx="2" fill="#2a2a2a"/>
 </svg></div>
-  <div class="su-deco" style="top:30px;right:-30px;transform:rotate(12deg);opacity:.13"><svg viewBox="0 0 200 160" width="170" height="136" xmlns="http://www.w3.org/2000/svg">
+  <div class="su-deco" style="top:30px;right:-30px;transform:rotate(12deg);opacity:.18"><svg viewBox="0 0 200 160" width="170" height="136" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <clipPath id="cf85"><polygon points="18,80 18,142 162,142 162,80"/></clipPath>
     <clipPath id="ct85"><polygon points="18,80 48,48 192,48 162,80"/></clipPath>
   </defs>
-  <polygon points="18,80 18,142 162,142 162,80" fill="#191919"/>
+  <polygon points="18,80 18,142 162,142 162,80" fill="#151515" filter="drop-shadow(0 4px 8px rgba(0,0,0,.3))"/>
   <g clip-path="url(#cf85)">
     <line x1="55" y1="80" x2="55" y2="142" stroke="#2e2e2e" stroke-width="2"/>
     <line x1="92" y1="80" x2="92" y2="142" stroke="#2e2e2e" stroke-width="2"/>
@@ -281,12 +281,12 @@ thead th.num{text-align:right}
   <rect x="55" y="44" width="12" height="6" rx="2" fill="#2a2a2a"/>
   <rect x="153" y="44" width="12" height="6" rx="2" fill="#2a2a2a"/>
 </svg></div>
-  <div class="su-deco" style="bottom:80px;left:20px;transform:rotate(8deg);opacity:.11"><svg viewBox="0 0 200 160" width="140" height="112" xmlns="http://www.w3.org/2000/svg">
+  <div class="su-deco" style="bottom:80px;left:20px;transform:rotate(8deg);opacity:.15"><svg viewBox="0 0 200 160" width="140" height="112" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <clipPath id="cf70"><polygon points="18,80 18,142 162,142 162,80"/></clipPath>
     <clipPath id="ct70"><polygon points="18,80 48,48 192,48 162,80"/></clipPath>
   </defs>
-  <polygon points="18,80 18,142 162,142 162,80" fill="#191919"/>
+  <polygon points="18,80 18,142 162,142 162,80" fill="#151515" filter="drop-shadow(0 4px 8px rgba(0,0,0,.3))"/>
   <g clip-path="url(#cf70)">
     <line x1="55" y1="80" x2="55" y2="142" stroke="#2e2e2e" stroke-width="2"/>
     <line x1="92" y1="80" x2="92" y2="142" stroke="#2e2e2e" stroke-width="2"/>
@@ -315,7 +315,7 @@ thead th.num{text-align:right}
   <rect x="55" y="44" width="12" height="6" rx="2" fill="#2a2a2a"/>
   <rect x="153" y="44" width="12" height="6" rx="2" fill="#2a2a2a"/>
 </svg></div>
-  <div class="su-deco" style="bottom:-15px;right:40px;transform:rotate(-6deg);opacity:.2"><svg viewBox="0 0 220 90" width="220" height="90" xmlns="http://www.w3.org/2000/svg">
+  <div class="su-deco" style="bottom:-15px;right:40px;transform:rotate(-6deg);opacity:.25"><svg viewBox="0 0 220 90" width="220" height="90" xmlns="http://www.w3.org/2000/svg">
   <rect x="0" y="30" width="220" height="12" rx="2" fill="#8B6914"/><rect x="0" y="46" width="220" height="12" rx="2" fill="#8B6914"/>
   <rect x="0" y="62" width="220" height="12" rx="2" fill="#a07820"/>
   <rect x="10" y="0" width="30" height="78" rx="2" fill="#7a5c10"/><rect x="95" y="0" width="30" height="78" rx="2" fill="#7a5c10"/><rect x="180" y="0" width="30" height="78" rx="2" fill="#7a5c10"/>
@@ -339,7 +339,7 @@ thead th.num{text-align:right}
 
   <div class="dz" id="dz" onclick="document.getElementById('fi').click()">
     <i class="ti ti-table-import" style="color:#0039b8"></i>
-    <h2 style="color:#0a1628">Carga tu archivo Excel</h2>
+    <h2 style="color:#0a2260;font-size:18px;font-weight:700;margin-bottom:.3rem">Carga tu archivo Excel</h2>
     <p>Arrastra tus archivos <strong>.xlsm / .xlsx</strong> aquí<br>Soporta múltiples archivos para trazabilidad multi-año</p>
     <button class="btn btn-p" onclick="event.stopPropagation();document.getElementById('fi').click()"><i class="ti ti-upload"></i> Seleccionar archivos</button>
     <input type="file" id="fi" accept=".xlsm,.xlsx,.xls" multiple style="display:none">
@@ -356,10 +356,20 @@ thead th.num{text-align:right}
   </div>
 
   <!-- Alpina branding at bottom -->
-  <div class="alpina-brand">
-    <img src="data:image/png;base64,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" alt="Alpina">
-    <span>Por un mundo delicioso</span>
-  </div>
+  <div class="alpina-brand"><svg viewBox="0 0 280 110" xmlns="http://www.w3.org/2000/svg">
+  <!-- outer light-blue background pill -->
+  <rect width="280" height="110" rx="18" fill="#4cbde8"/>
+  <!-- white oval -->
+  <ellipse cx="140" cy="48" rx="78" ry="36" fill="white"/>
+  <!-- dark blue oval -->
+  <ellipse cx="140" cy="48" rx="70" ry="29" fill="#003f9e"/>
+  <!-- mountain silhouette in white -->
+  <polygon points="108,65 122,38 135,52 148,30 163,52 176,38 190,65" fill="white"/>
+  <!-- alpina script text inside dark oval -->
+  <text x="140" y="56" text-anchor="middle" font-family="Georgia,Times New Roman,serif" font-style="italic" font-size="17" font-weight="bold" fill="white" letter-spacing="1">alpina</text>
+  <!-- tagline -->
+  <text x="140" y="90" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="12" font-weight="700" fill="#002b6e" letter-spacing=".5">Por un mundo delicioso</text>
+</svg></div>
     <div style="margin-top:.9rem;display:flex;gap:8px;justify-content:flex-end">
       <button class="btn btn-g btn-sm" onclick="document.getElementById('fi').click()"><i class="ti ti-plus"></i> Agregar</button>
       <button class="btn btn-p btn-sm" onclick="launchApp()"><i class="ti ti-chart-bar"></i> Analizar</button>
