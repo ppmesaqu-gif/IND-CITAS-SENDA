@@ -1107,18 +1107,29 @@ function rCanal(rows){
       onClick:(evt,els)=>{if(els.length>0)openDetail(top10inv[els[0].index].cod);}}});
 
   } else {
-    // Sin filtro de canal: gráficas originales por canal
-    wrapper.classList.remove('pair'); card2.style.display='none'; dC('ch-ctr2');
+    // Sin filtro de canal: stacked bar por canal + tipos cubeta
+    wrapper.classList.add('pair'); card2.style.display='';
     const canals=[...new Set(rows.map(r=>r.canal))].filter(Boolean);
-    document.getElementById('ctr-title').innerHTML='Evolución mensual por Canal <span class="meta" id="canal-p">'+cd.length+' canales · clic en línea → canal</span>';
+    document.getElementById('ctr-title').innerHTML='Despacho por Canal / Mes <span class="meta" id="canal-p">'+cd.length+' canales · clic → filtrar</span>';
     document.getElementById('cpct-title').innerHTML='% Retorno por Canal <span class="meta" id="cpct-meta">clic para filtrar</span>';
     document.getElementById('cinv-title').textContent='Inventario en calle por Canal';
     const cByYM={};
     canals.forEach(c=>{cByYM[c]={};md.forEach(m=>{cByYM[c][m.ym]=0;});});
     rows.forEach(r=>{if(r.ym&&cByYM[r.canal])cByYM[r.canal][r.ym]=(cByYM[r.canal][r.ym]||0)+r.d;});
-    mkChart('ch-ctr',{type:'line',data:{labels:labs,datasets:canals.map((c,i)=>({label:c,data:md.map(m=>cByYM[c][m.ym]||0),borderColor:CC[c]||PA[i%PA.length],backgroundColor:'transparent',tension:.3,pointRadius:3,borderWidth:2}))},
-      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10},boxWidth:12}}},scales:{...baseScales},
+    mkChart('ch-ctr',{type:'bar',data:{labels:labs,datasets:canals.map((c,i)=>({label:c,data:md.map(m=>cByYM[c][m.ym]||0),backgroundColor:(CC[c]||PA[i%PA.length])+'cc',stack:'s'}))},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10},boxWidth:12}}},scales:{x:{grid:{display:false},ticks:{font:{size:10},maxRotation:45},stacked:true},y:{grid:{color:gridColor},ticks:{font:{size:10}},stacked:true}},
       onClick:(evt,els)=>{if(els.length>0){const cl=canals[els[0].datasetIndex];if(cl){document.getElementById('fc').value=cl;refresh();}}}}});
+
+    // ch-ctr2: D vs R por tipo de cubeta (canal total)
+    document.getElementById('ctr-title2').textContent='D vs R por Tipo de Cubeta';
+    const tipos=['C1','C2','C3','Estibas','Cajas'];
+    const totD=[rows.reduce((s,r)=>s+(r.c1||0),0),rows.reduce((s,r)=>s+(r.c2||0),0),rows.reduce((s,r)=>s+(r.c3||0),0),rows.reduce((s,r)=>s+(r.cEst||0),0),rows.reduce((s,r)=>s+(r.cCaj||0),0)];
+    const totR=[rows.reduce((s,r)=>s+(r.r1||0),0),rows.reduce((s,r)=>s+(r.r2||0),0),rows.reduce((s,r)=>s+(r.r3||0),0),rows.reduce((s,r)=>s+(r.rEst||0),0),rows.reduce((s,r)=>s+(r.rCaj||0),0)];
+    mkChart('ch-ctr2',{type:'bar',data:{labels:tipos,datasets:[
+      {label:'Despacho',data:totD,backgroundColor:'rgba(37,99,235,.75)'},
+      {label:'Retorno',data:totR,backgroundColor:'rgba(16,185,129,.75)'}
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10},boxWidth:12}}},scales:{...baseScales}}});
+
     const cpts=cd.map(c=>parseFloat(c.pct.toFixed(1)));
     mkChart('ch-cpct',{type:'bar',data:{labels:cd.map(c=>c.canal),datasets:[{label:'%',data:cpts,backgroundColor:cpts.map(p=>pb(p))}]},
       options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{min:0,max:110,ticks:{callback:v=>v+'%',font:{size:10}},grid:{color:gridColor}}},
@@ -1181,6 +1192,39 @@ function rClientes(rows){
       <td>${anoms>0?`<span class="tag tag-r" onclick="event.stopPropagation();filtrarAnom('${c.cod}')">⚠ ${anoms}</span>`:''}</td>
     </tr>`;
   }).join('')+top10Row('cli',clisRaw.length,clisRaw,()=>refresh());
+
+  // ── 4 gráficas de clientes ────────────────────────────────────────────────
+  const clisAll2=aggCli(rows).filter(c=>c.d>0);
+
+  // ch-cli1: top 10 por despacho (barras horizontales)
+  const top10d=clisAll2.slice().sort((a,b)=>b.d-a.d).slice(0,10);
+  mkChart('ch-cli1',{type:'bar',indexAxis:'y',data:{labels:top10d.map(c=>c.cli.substring(0,25)),datasets:[{label:'Despacho',data:top10d.map(c=>c.d),backgroundColor:top10d.map(c=>c.pct<60?'rgba(239,68,68,.8)':c.pct<85?'rgba(245,158,11,.8)':'rgba(37,99,235,.8)')}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:gridColor},ticks:{font:{size:10}}},y:{grid:{display:false},ticks:{font:{size:9}}}},
+    onClick:(evt,els)=>{if(els.length>0)openDetail(top10d[els[0].index].cod);}}});
+
+  // ch-cli2: top 5 mayor + 5 menor % retorno (bicolor horizontal)
+  const byPct2=clisAll2.slice().sort((a,b)=>b.pct-a.pct);
+  const cBest=byPct2.slice(0,5),cWorst=byPct2.length>5?byPct2.slice(-5).reverse():[];
+  const cliPct=[...cBest,...cWorst];
+  mkChart('ch-cli2',{type:'bar',indexAxis:'y',data:{labels:cliPct.map(c=>c.cli.substring(0,22)),datasets:[{label:'%',data:cliPct.map(c=>parseFloat(c.pct.toFixed(1))),backgroundColor:[...cBest.map(()=>'rgba(16,185,129,.8)'),...cWorst.map(()=>'rgba(239,68,68,.8)')]}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{min:0,max:110,ticks:{callback:v=>v+'%',font:{size:10}},grid:{color:gridColor}},y:{grid:{display:false},ticks:{font:{size:9}}}},
+    onClick:(evt,els)=>{if(els.length>0)openDetail(cliPct[els[0].index].cod);}}});
+
+  // ch-cli3: D vs R por tipo de cubeta
+  const ctipos=['C1','C2','C3','Estibas','Cajas'];
+  const cTotD=[rows.reduce((s,r)=>s+(r.c1||0),0),rows.reduce((s,r)=>s+(r.c2||0),0),rows.reduce((s,r)=>s+(r.c3||0),0),rows.reduce((s,r)=>s+(r.cEst||0),0),rows.reduce((s,r)=>s+(r.cCaj||0),0)];
+  const cTotR=[rows.reduce((s,r)=>s+(r.r1||0),0),rows.reduce((s,r)=>s+(r.r2||0),0),rows.reduce((s,r)=>s+(r.r3||0),0),rows.reduce((s,r)=>s+(r.rEst||0),0),rows.reduce((s,r)=>s+(r.rCaj||0),0)];
+  mkChart('ch-cli3',{type:'bar',data:{labels:ctipos,datasets:[
+    {label:'Despacho',data:cTotD,backgroundColor:'rgba(37,99,235,.75)'},
+    {label:'Retorno',data:cTotR,backgroundColor:'rgba(16,185,129,.75)'}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10},boxWidth:12}}},scales:{...baseScales}}});
+
+  // ch-cli4: scatter inventario vs % retorno (un punto por cliente)
+  const scData=clisAll2.filter(c=>c.inv>0).map(c=>({x:parseFloat(c.pct.toFixed(1)),y:Math.round(c.inv),cli:c.cli,cod:c.cod}));
+  mkChart('ch-cli4',{type:'scatter',data:{datasets:[{label:'Clientes',data:scData,backgroundColor:scData.map(d=>d.x<60?'rgba(239,68,68,.7)':d.x<85?'rgba(245,158,11,.7)':'rgba(37,99,235,.7)'),pointRadius:5,pointHoverRadius:7}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:d=>`${d.raw.cli}: ${d.raw.x}% · Inv ${d.raw.y}`}}},
+    scales:{x:{title:{display:true,text:'% Retorno',font:{size:11}},min:0,max:110,ticks:{callback:v=>v+'%',font:{size:10}},grid:{color:gridColor}},y:{title:{display:true,text:'Inventario',font:{size:11}},grid:{color:gridColor},ticks:{font:{size:10}}}},
+    onClick:(evt,els)=>{if(els.length>0)openDetail(scData[els[0].index].cod);}}});
 }
 
 // ── RENDER: INVENTARIO ─────────────────────────────────────────────────────
@@ -2104,9 +2148,9 @@ function captureViewImage(cb){
 
   const viewCharts={
     resumen:gF().mn?['ch-rt','ch-rc','ch-rt2','ch-rt3']:['ch-rt','ch-rc'],
-    fechas:['ch-fm','ch-fp','ch-fi'],
-    canal:gF().cn?['ch-ctr','ch-ctr2','ch-cpct','ch-cinv']:['ch-ctr','ch-cpct','ch-cinv'],
-    clientes:[],
+    fechas:['ch-fm','ch-fp','ch-fi','ch-fv'],
+    canal:gF().cn?['ch-ctr','ch-ctr2','ch-cpct','ch-cinv']:['ch-ctr','ch-ctr2','ch-cpct','ch-cinv'],
+    clientes:['ch-cli1','ch-cli2','ch-cli3','ch-cli4'],
     inventario:['ch-inv'],
     recogida:['ch-rec'],
     anomalias:[]
