@@ -315,17 +315,33 @@ thead th.num{text-align:right}
         <button class="itab" onclick="sit('fechas','yoy',this)">Comparativo Anual</button>
       </div>
       <div id="fechas-men">
-        <div class="card"><div class="ct2">Despacho y Retorno por Mes <span class="meta">clic en barra → clientes del mes</span></div><div class="cw" style="height:270px"><canvas id="ch-fm" role="img" aria-label="Despacho retorno mensual">–</canvas></div></div>
+        <div class="card"><div class="ct2">Despacho y Retorno por Mes <span class="meta">clic en barra → clientes del mes</span></div><div class="cw" style="height:250px"><canvas id="ch-fm" role="img" aria-label="Despacho retorno mensual">–</canvas></div></div>
         <div class="g2">
-          <div class="card"><div class="ct2">% Retorno mensual</div><div class="cw" style="height:200px"><canvas id="ch-fp" role="img" aria-label="Porcentaje retorno mensual">–</canvas></div></div>
-          <div class="card"><div class="ct2">Inventario en calle / mes</div><div class="cw" style="height:200px"><canvas id="ch-fi" role="img" aria-label="Inventario por mes">–</canvas></div></div>
+          <div class="card"><div class="ct2">% Retorno mensual</div><div class="cw" style="height:190px"><canvas id="ch-fp" role="img" aria-label="Porcentaje retorno mensual">–</canvas></div></div>
+          <div class="card"><div class="ct2">Inventario en calle / mes</div><div class="cw" style="height:190px"><canvas id="ch-fi" role="img" aria-label="Inventario por mes">–</canvas></div></div>
+        </div>
+        <div class="g2">
+          <div class="card"><div class="ct2">D vs R por Tipo de Cubeta <span class="meta" id="fv-sub"></span></div><div class="cw" style="height:190px"><canvas id="ch-fv" role="img" aria-label="Cubetas por tipo mensual">–</canvas></div></div>
+          <div class="card"><div class="ct2">Top 5 Mayor · 5 Menor Retorno</div><div class="cw" style="height:190px"><canvas id="ch-fv2" role="img" aria-label="Top retorno clientes">–</canvas></div></div>
         </div>
       </div>
       <div id="fechas-sem" style="display:none">
-        <div class="card"><div class="ct2">Actividad semanal</div><div class="cw" style="height:270px"><canvas id="ch-fw" role="img" aria-label="Actividad semanal">–</canvas></div></div>
+        <div class="card"><div class="ct2">Actividad semanal — Despacho · Retorno · % Retorno</div><div class="cw" style="height:240px"><canvas id="ch-fw" role="img" aria-label="Actividad semanal">–</canvas></div></div>
+        <div class="g2">
+          <div class="card"><div class="ct2">% Retorno por Semana</div><div class="cw" style="height:190px"><canvas id="ch-fw2" role="img" aria-label="Porcentaje retorno semanal">–</canvas></div></div>
+          <div class="card"><div class="ct2">D vs R por Tipo de Cubeta / Semana</div><div class="cw" style="height:190px"><canvas id="ch-fw3" role="img" aria-label="Cubetas por tipo semanal">–</canvas></div></div>
+        </div>
+        <div class="card"><div class="ct2">Semanas Críticas — Mayor Despacho · Menor Retorno</div><div class="cw" style="height:210px"><canvas id="ch-fw4" role="img" aria-label="Semanas criticas">–</canvas></div></div>
       </div>
       <div id="fechas-yoy" style="display:none">
-        <div class="card"><div class="ct2">Comparativo mismo mes — por año</div><div class="cw" style="height:270px"><canvas id="ch-fy" role="img" aria-label="Comparativo anual">–</canvas></div></div>
+        <div class="g2">
+          <div class="card"><div class="ct2">Despacho — Comparativo Anual</div><div class="cw" style="height:230px"><canvas id="ch-fy" role="img" aria-label="Comparativo anual despacho">–</canvas></div></div>
+          <div class="card"><div class="ct2">Retorno — Comparativo Anual</div><div class="cw" style="height:230px"><canvas id="ch-fy2" role="img" aria-label="Comparativo anual retorno">–</canvas></div></div>
+        </div>
+        <div class="g2">
+          <div class="card"><div class="ct2">% Retorno por Año</div><div class="cw" style="height:190px"><canvas id="ch-fy3" role="img" aria-label="Porcentaje retorno anual">–</canvas></div></div>
+          <div class="card"><div class="ct2">D vs R por Año</div><div class="cw" style="height:190px"><canvas id="ch-fy4" role="img" aria-label="Despacho vs retorno por año">–</canvas></div></div>
+        </div>
       </div>
     </div>
 
@@ -349,6 +365,14 @@ thead th.num{text-align:right}
     <div id="vw-clientes" class="vw">
       <div class="al2 al-i"><i class="ti ti-info-circle"></i><div>Haz clic en cualquier fila para ver el detalle completo de movimientos del cliente, incluyendo todas las entradas/salidas con fechas y alertas.</div></div>
       <div class="eb"><button class="btn btn-g btn-sm" onclick="exportClientesCSV()"><i class="ti ti-file-spreadsheet"></i> Exportar clientes</button></div>
+      <div class="g2">
+        <div class="card"><div class="ct2">Top 10 Clientes — Mayor Despacho</div><div class="cw" style="height:210px"><canvas id="ch-cli1" role="img" aria-label="Top clientes despacho">–</canvas></div></div>
+        <div class="card"><div class="ct2">Top 5 Mayor · 5 Menor % Retorno</div><div class="cw" style="height:210px"><canvas id="ch-cli2" role="img" aria-label="Top retorno clientes">–</canvas></div></div>
+      </div>
+      <div class="g2">
+        <div class="card"><div class="ct2">D vs R por Tipo de Cubeta</div><div class="cw" style="height:190px"><canvas id="ch-cli3" role="img" aria-label="Cubetas por tipo clientes">–</canvas></div></div>
+        <div class="card"><div class="ct2">Inventario vs % Retorno — Mapa de Clientes</div><div class="cw" style="height:190px"><canvas id="ch-cli4" role="img" aria-label="Scatter inventario retorno">–</canvas></div></div>
+      </div>
       <div class="card"><div class="ct2">Todos los Clientes <span class="meta" id="cli-count">clic en fila → movimientos</span></div>
         <div class="tw"><table id="tbl-cli"><thead><tr><th>#</th><th>Código</th><th>Cliente</th><th>Canal</th><th class="num">Despacho</th><th class="num">CUB001</th><th class="num">CUB002</th><th class="num">CUB003</th><th class="num">EST003</th><th class="num">CAJAS</th><th class="num">Retorno</th><th class="num">CUB001 R</th><th class="num">CUB002 R</th><th class="num">CUB003 R</th><th class="num">EST003 R</th><th class="num">CAJAS R</th><th class="num">% Retorno</th><th class="num">Inventario</th><th>Primer reg.</th><th>Último reg.</th><th>Tendencia</th><th>Alertas</th></tr></thead><tbody></tbody></table></div>
       </div>
@@ -935,6 +959,8 @@ function rResumen(rows){
 function rFechas(rows){
   const md=aggYM(rows),labs=md.map(m=>m.label);
   const mP=md.map(m=>parseFloat(m.pct.toFixed(1)));
+
+  // ── Mensual ──────────────────────────────────────────────────────────────
   mkChart('ch-fm',{type:'bar',data:{labels:labs,datasets:[
     {label:'Despacho',data:md.map(m=>m.d),backgroundColor:'rgba(37,99,235,.75)'},
     {label:'Retorno',data:md.map(m=>m.ret),backgroundColor:'rgba(16,185,129,.75)'}
@@ -947,15 +973,85 @@ function rFechas(rows){
   mkChart('ch-fi',{type:'bar',data:{labels:labs,datasets:[{label:'Inv',data:md.map(m=>Math.round(m.inv)),backgroundColor:md.map(m=>m.inv>0?'rgba(245,158,11,.8)':'rgba(16,185,129,.8)')}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{...baseScales}}});
 
-  const wk=aggWk(rows);
-  mkChart('ch-fw',{type:'bar',data:{labels:wk.map(w=>w.wk.replace(/\d{4}-/,'')),datasets:[
-    {label:'Despacho',data:wk.map(w=>w.d),backgroundColor:'rgba(37,99,235,.7)'},
-    {label:'Retorno',data:wk.map(w=>w.ret),backgroundColor:'rgba(16,185,129,.7)'}
-  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:9},maxRotation:90}},y:{grid:{color:gridColor},ticks:{font:{size:10}}}}}});
+  // ch-fv: D vs R por tipo de cubeta (mensual agregado)
+  const f=gF();
+  document.getElementById('fv-sub').textContent=f.mn?(f.mn+(f.yr?' '+f.yr:'')):'todo el período';
+  const tipos=['C1','C2','C3','Estibas','Cajas'];
+  const totD=[rows.reduce((s,r)=>s+(r.c1||0),0),rows.reduce((s,r)=>s+(r.c2||0),0),rows.reduce((s,r)=>s+(r.c3||0),0),rows.reduce((s,r)=>s+(r.cEst||0),0),rows.reduce((s,r)=>s+(r.cCaj||0),0)];
+  const totR=[rows.reduce((s,r)=>s+(r.r1||0),0),rows.reduce((s,r)=>s+(r.r2||0),0),rows.reduce((s,r)=>s+(r.r3||0),0),rows.reduce((s,r)=>s+(r.rEst||0),0),rows.reduce((s,r)=>s+(r.rCaj||0),0)];
+  mkChart('ch-fv',{type:'bar',data:{labels:tipos,datasets:[
+    {label:'Despacho',data:totD,backgroundColor:'rgba(37,99,235,.75)'},
+    {label:'Retorno',data:totR,backgroundColor:'rgba(16,185,129,.75)'}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10},boxWidth:12}}},scales:{...baseScales}}});
 
+  // ch-fv2: top 5 mayor + 5 menor retorno (horizontal bicolor)
+  const clisAll=aggCli(rows).filter(c=>c.d>0);
+  const byPct=clisAll.slice().sort((a,b)=>b.pct-a.pct);
+  const fBest=byPct.slice(0,5),fWorst=byPct.length>5?byPct.slice(-5).reverse():[];
+  const fv2Data=[...fBest,...fWorst];
+  mkChart('ch-fv2',{type:'bar',indexAxis:'y',data:{labels:fv2Data.map(c=>c.cli.substring(0,22)),datasets:[{label:'%',data:fv2Data.map(c=>parseFloat(c.pct.toFixed(1))),backgroundColor:[...fBest.map(()=>'rgba(16,185,129,.8)'),...fWorst.map(()=>'rgba(239,68,68,.8)')]}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{min:0,max:110,ticks:{callback:v=>v+'%',font:{size:10}},grid:{color:gridColor}},y:{grid:{display:false},ticks:{font:{size:9}}}},
+    onClick:(evt,els)=>{if(els.length>0)openDetail(fv2Data[els[0].index].cod);}}});
+
+  // ── Semanal ───────────────────────────────────────────────────────────────
+  const wk=aggWkFull(rows);
+  const wkL=wk.map(w=>'S'+w.wk.replace(/\d{4}-W/,''));
+  const wkP=wk.map(w=>parseFloat(w.pct.toFixed(1)));
+
+  mkChart('ch-fw',{data:{labels:wkL,datasets:[
+    {type:'bar',label:'Despacho',data:wk.map(w=>w.d),backgroundColor:wk.map(w=>w.pct<60?'rgba(239,68,68,.7)':w.pct<85?'rgba(245,158,11,.7)':'rgba(37,99,235,.7)'),yAxisID:'y'},
+    {type:'bar',label:'Retorno',data:wk.map(w=>w.ret),backgroundColor:'rgba(16,185,129,.7)',yAxisID:'y'},
+    {type:'line',label:'% Ret',data:wkP,borderColor:'#f59e0b',borderWidth:2.5,pointRadius:4,pointBackgroundColor:wkP.map(p=>pb(p)),tension:.2,yAxisID:'y2'}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{mode:'index'}},
+    scales:{x:{grid:{display:false},ticks:{font:{size:10},maxRotation:90}},y:{position:'left',grid:{color:gridColor},ticks:{font:{size:10}}},
+    y2:{position:'right',min:0,max:110,ticks:{callback:v=>v+'%',font:{size:10}},grid:{display:false}}}}});
+
+  mkChart('ch-fw2',{type:'line',data:{labels:wkL,datasets:[{label:'%',data:wkP,borderColor:'#7c3aed',backgroundColor:'rgba(124,58,237,.1)',fill:true,tension:.4,pointRadius:4,pointBackgroundColor:wkP.map(p=>pb(p))}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:10},maxRotation:90}},y:{min:0,max:110,ticks:{callback:v=>v+'%',font:{size:10}},grid:{color:gridColor}}}}});
+
+  // ch-fw3: D vs R por tipo de cubeta por semana (barras agrupadas por tipo)
+  const tiposL=['C1','C2','C3','Est','Caj'];
+  const wkTD=wk.map(w=>[w.c1,w.c2,w.c3,w.cEst,w.cCaj]);
+  const wkTR=wk.map(w=>[w.r1,w.r2,w.r3,w.rEst,w.rCaj]);
+  mkChart('ch-fw3',{type:'bar',data:{labels:wkL,datasets:[
+    ...tiposL.map((t,i)=>({label:t+' D',data:wkTD.map(w=>w[i]),backgroundColor:PA[i]+'cc',stack:'d'})),
+    ...tiposL.map((t,i)=>({label:t+' R',data:wkTR.map(w=>w[i]),backgroundColor:PA[i]+'66',stack:'r'}))
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:9},boxWidth:10}}},scales:{x:{grid:{display:false},ticks:{font:{size:10},maxRotation:90}},y:{grid:{color:gridColor},ticks:{font:{size:10}}}}}});
+
+  // ch-fw4: semanas críticas ordenadas por despacho desc + %Ret línea
+  const wkS=wk.slice().sort((a,b)=>b.d-a.d);
+  const wkSL=wkS.map(w=>'S'+w.wk.replace(/\d{4}-W/,''));
+  const wkSP=wkS.map(w=>parseFloat(w.pct.toFixed(1)));
+  mkChart('ch-fw4',{data:{labels:wkSL,datasets:[
+    {type:'bar',label:'Despacho',data:wkS.map(w=>w.d),backgroundColor:wkS.map(w=>w.pct<60?'rgba(239,68,68,.75)':w.pct<85?'rgba(245,158,11,.75)':'rgba(37,99,235,.75)'),yAxisID:'y'},
+    {type:'line',label:'% Ret',data:wkSP,borderColor:'#dc2626',borderWidth:2.5,pointRadius:5,pointBackgroundColor:wkSP.map(p=>pb(p)),tension:.2,yAxisID:'y2'}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{mode:'index'}},
+    scales:{x:{grid:{display:false},ticks:{font:{size:11}}},y:{position:'left',grid:{color:gridColor},ticks:{font:{size:10}}},
+    y2:{position:'right',min:0,max:110,ticks:{callback:v=>v+'%',font:{size:10}},grid:{display:false}}}}});
+
+  // ── Comparativo Anual ─────────────────────────────────────────────────────
   const yoy=aggYoY(rows);
-  mkChart('ch-fy',{type:'line',data:{labels:MO.map(m=>m.substring(0,3)),datasets:yoy.map((y,i)=>({label:String(y.yr),data:y.m,borderColor:PA[i%PA.length],backgroundColor:'transparent',tension:.3,pointRadius:3}))},
+  const mLabs=MO.map(m=>m.substring(0,3));
+
+  mkChart('ch-fy',{type:'line',data:{labels:mLabs,datasets:yoy.map((y,i)=>({label:String(y.yr),data:y.m,borderColor:PA[i%PA.length],backgroundColor:'transparent',tension:.3,pointRadius:3}))},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10},boxWidth:12}}},scales:{...baseScales}}});
+
+  mkChart('ch-fy2',{type:'line',data:{labels:mLabs,datasets:yoy.map((y,i)=>({label:String(y.yr),data:y.mr,borderColor:PA[i%PA.length],backgroundColor:'transparent',tension:.3,pointRadius:3,borderDash:[4,2]}))},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10},boxWidth:12}}},scales:{...baseScales}}});
+
+  // ch-fy3: % retorno por año (línea por año, eje Y = %)
+  const yoyPct=yoy.map(y=>({yr:y.yr,mp:y.m.map((d,i)=>d>0?parseFloat(pct(y.mr[i],d).toFixed(1)):null)}));
+  mkChart('ch-fy3',{type:'line',data:{labels:mLabs,datasets:yoyPct.map((y,i)=>({label:String(y.yr),data:y.mp,borderColor:PA[i%PA.length],backgroundColor:'transparent',tension:.3,pointRadius:3,spanGaps:true}))},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10},boxWidth:12}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{min:0,max:110,ticks:{callback:v=>v+'%',font:{size:10}},grid:{color:gridColor}}}}});
+
+  // ch-fy4: D vs R por año (barras agrupadas)
+  const years=yoy.map(y=>String(y.yr));
+  const yrD=yoy.map(y=>y.m.reduce((s,v)=>s+v,0));
+  const yrR=yoy.map(y=>y.mr.reduce((s,v)=>s+v,0));
+  mkChart('ch-fy4',{type:'bar',data:{labels:years,datasets:[
+    {label:'Despacho',data:yrD,backgroundColor:'rgba(37,99,235,.75)'},
+    {label:'Retorno',data:yrR,backgroundColor:'rgba(16,185,129,.75)'}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10},boxWidth:12}}},scales:{...baseScales}}});
 }
 
 // ── RENDER: CANAL ──────────────────────────────────────────────────────────
