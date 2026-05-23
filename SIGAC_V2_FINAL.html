@@ -293,8 +293,14 @@ thead th.num{text-align:right}
     <div id="vw-resumen" class="vw on">
       <div class="kr" id="kr-main"></div>
       <div class="g2">
-        <div class="card"><div class="ct2">Tendencia mensual <span class="meta" id="rp">–</span></div><div class="cw" style="height:230px"><canvas id="ch-rt" role="img" aria-label="Tendencia mensual despacho retorno">–</canvas></div></div>
-        <div class="card"><div class="ct2">Despacho por Canal <span class="meta">clic para filtrar</span></div><div class="cw" style="height:230px"><canvas id="ch-rc" role="img" aria-label="Distribucion por canal">–</canvas></div></div>
+        <div class="card"><div class="ct2" id="rt-ct">Tendencia mensual <span class="meta" id="rp">–</span></div><div class="cw" style="height:230px"><canvas id="ch-rt" role="img" aria-label="Tendencia mensual despacho retorno">–</canvas></div></div>
+        <div class="card"><div class="ct2" id="rc-ct">Despacho por Canal <span class="meta">clic para filtrar</span></div><div class="cw" style="height:230px"><canvas id="ch-rc" role="img" aria-label="Distribucion por canal">–</canvas></div></div>
+      </div>
+      <div id="rs-week-extra" style="display:none">
+        <div class="g2">
+          <div class="card"><div class="ct2">D vs R por Tipo de Cubeta <span class="meta" id="rt2-sub"></span></div><div class="cw" style="height:220px"><canvas id="ch-rt2" role="img" aria-label="Cubetas por tipo">–</canvas></div></div>
+          <div class="card"><div class="ct2">Semanas Críticas <span class="meta">↑ despacho · ↓ retorno</span></div><div class="cw" style="height:220px"><canvas id="ch-rt3" role="img" aria-label="Semanas criticas">–</canvas></div></div>
+        </div>
       </div>
       <div class="card"><div class="ct2">Resumen por Canal <span class="meta" id="rc-count">–</span></div>
         <div class="tw"><table id="tbl-rs"><thead><tr><th>Canal</th><th>Descripción</th><th class="num">Despacho</th><th class="num">Retorno</th><th class="num">% Retorno</th><th class="num">Inventario Neto</th><th class="num">Clientes</th></tr></thead><tbody></tbody></table></div>
@@ -700,6 +706,20 @@ function aggWk(rows){
   return Object.values(mp).sort((a,b)=>a.wk<b.wk?-1:1);
 }
 
+function aggWkFull(rows){
+  const mp={};
+  rows.forEach(r=>{
+    if(!r.week)return;
+    if(!mp[r.week])mp[r.week]={wk:r.week,d:0,ret:0,c1:0,c2:0,c3:0,cEst:0,cCaj:0,r1:0,r2:0,r3:0,rEst:0,rCaj:0,canals:{}};
+    const w=mp[r.week];
+    w.d+=r.d;w.ret+=r.ret;
+    w.c1+=r.c1||0;w.c2+=r.c2||0;w.c3+=r.c3||0;w.cEst+=r.cEst||0;w.cCaj+=r.cCaj||0;
+    w.r1+=r.r1||0;w.r2+=r.r2||0;w.r3+=r.r3||0;w.rEst+=r.rEst||0;w.rCaj+=r.rCaj||0;
+    if(r.canal)w.canals[r.canal]=(w.canals[r.canal]||0)+r.d;
+  });
+  return Object.values(mp).map(w=>({...w,pct:pct(w.ret,w.d)})).sort((a,b)=>a.wk<b.wk?-1:1);
+}
+
 function aggYoY(rows){
   const mp={};
   rows.forEach(r=>{if(!r.yr||!r.mn)return;const mi=MO.indexOf(r.mn);if(mi<0)return;const k=String(r.yr);if(!mp[k])mp[k]={yr:r.yr,m:Array(12).fill(0),mr:Array(12).fill(0)};mp[k].m[mi]+=r.d;mp[k].mr[mi]+=r.ret;});
@@ -817,6 +837,7 @@ function top10Row(containerId,total,allData,renderFn){
 
 // ── RENDER: RESUMEN ────────────────────────────────────────────────────────
 function rResumen(rows){
+  const f=gF();
   const clis=aggCli(rows),cd=aggCanal(rows),md=aggYM(rows);
   const td=rows.reduce((s,r)=>s+r.d,0),tr=rows.reduce((s,r)=>s+r.ret,0);
   const ti=clis.reduce((s,c)=>s+c.inv,0),pg=pct(tr,td);
@@ -829,21 +850,74 @@ function rResumen(rows){
     <div class="kc b"><div class="kl"><i class="ti ti-users"></i>Activos</div><div class="kv">${fN(activos)}</div><div class="ks">con despachos</div></div>
     <div class="kc r"><div class="kl"><i class="ti ti-alert-triangle"></i>Críticos</div><div class="kv">${fN(crit)}</div><div class="ks">retorno &lt; 50%</div></div>`;
 
-  if(md.length){document.getElementById('rp').textContent=`${md[0].label} → ${md[md.length-1].label}`;}
-  const mLabs=md.map(m=>m.label),mP=md.map(m=>parseFloat(m.pct.toFixed(1)));
-  mkChart('ch-rt',{data:{labels:mLabs,datasets:[
-    {type:'bar',label:'Despacho',data:md.map(m=>m.d),backgroundColor:'rgba(37,99,235,.7)',yAxisID:'y'},
-    {type:'bar',label:'Retorno',data:md.map(m=>m.ret),backgroundColor:'rgba(16,185,129,.7)',yAxisID:'y'},
-    {type:'line',label:'% Ret',data:mP,borderColor:'#f59e0b',borderWidth:2,pointRadius:3,pointBackgroundColor:'#f59e0b',tension:.3,yAxisID:'y2'}
-  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{mode:'index'}},
-    scales:{x:{grid:{display:false},ticks:{font:{size:10},maxRotation:45}},y:{position:'left',grid:{color:gridColor},ticks:{font:{size:10}}},
-    y2:{position:'right',min:0,max:110,ticks:{callback:v=>v+'%',font:{size:10}},grid:{display:false}}},
-    onClick:(evt,els)=>{if(els.length>0){const ym=md[els[0].index]?.ym;if(ym){document.getElementById('fm').value=md[els[0].index]?.mn||'';refresh();}}}}});
+  const rsWeekExtra=document.getElementById('rs-week-extra');
 
-  const top8=cd.slice(0,8);
-  mkChart('ch-rc',{type:'doughnut',data:{labels:top8.map(c=>c.canal),datasets:[{data:top8.map(c=>c.d),backgroundColor:top8.map((c,i)=>CC[c.canal]||PA[i%PA.length]),borderWidth:2,borderColor:'#fff'}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:11},boxWidth:12}}},
-    onClick:(evt,els)=>{if(els.length>0)onClickCanal(top8[els[0].index].canal);}}});
+  if(f.mn){
+    // ── Mes filtrado: vista semanal ──────────────────────────────────────────
+    rsWeekExtra.style.display='';
+    const wk=aggWkFull(rows);
+    const wLabs=wk.map(w=>'S'+w.wk.replace(/\d{4}-W/,''));
+    const wP=wk.map(w=>parseFloat(w.pct.toFixed(1)));
+
+    // ch-rt: tendencia semanal D+R+%Ret (barras coloreadas por riesgo)
+    document.getElementById('rt-ct').innerHTML='Tendencia semanal <span class="meta" id="rp">'+(f.mn+(f.yr?' '+f.yr:''))+' · por semana</span>';
+    mkChart('ch-rt',{data:{labels:wLabs,datasets:[
+      {type:'bar',label:'Despacho',data:wk.map(w=>w.d),backgroundColor:wk.map(w=>w.pct<60?'rgba(239,68,68,.75)':w.pct<85?'rgba(245,158,11,.75)':'rgba(37,99,235,.75)'),yAxisID:'y'},
+      {type:'bar',label:'Retorno',data:wk.map(w=>w.ret),backgroundColor:'rgba(16,185,129,.7)',yAxisID:'y'},
+      {type:'line',label:'% Ret',data:wP,borderColor:'#f59e0b',borderWidth:2.5,pointRadius:5,pointBackgroundColor:wP.map(p=>pb(p)),tension:.2,yAxisID:'y2'}
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{mode:'index'}},
+      scales:{x:{grid:{display:false},ticks:{font:{size:12}}},y:{position:'left',grid:{color:gridColor},ticks:{font:{size:10}}},
+      y2:{position:'right',min:0,max:110,ticks:{callback:v=>v+'%',font:{size:10}},grid:{display:false}}}}});
+
+    // ch-rc: despacho por canal / semana (barras apiladas)
+    const top6=cd.slice(0,6);
+    const cByWk={};
+    top6.forEach(c=>{cByWk[c.canal]={};wk.forEach(w=>{cByWk[c.canal][w.wk]=0;});});
+    rows.forEach(r=>{if(cByWk[r.canal]&&r.week)cByWk[r.canal][r.week]=(cByWk[r.canal][r.week]||0)+r.d;});
+    document.getElementById('rc-ct').innerHTML='Despacho Canal / Semana <span class="meta">'+f.mn+(f.yr?' '+f.yr:'')+'</span>';
+    mkChart('ch-rc',{type:'bar',data:{labels:wLabs,datasets:top6.map((c,i)=>({label:c.canal,data:wk.map(w=>cByWk[c.canal][w.wk]||0),backgroundColor:CC[c.canal]||PA[i%PA.length],stack:'s'}))},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10},boxWidth:12}}},scales:{...baseScales}}});
+
+    // ch-rt2: D vs R por tipo de cubeta (barras agrupadas)
+    document.getElementById('rt2-sub').textContent=f.mn+(f.yr?' '+f.yr:'');
+    const tipos=['C1','C2','C3','Estibas','Cajas'];
+    const totD=[rows.reduce((s,r)=>s+(r.c1||0),0),rows.reduce((s,r)=>s+(r.c2||0),0),rows.reduce((s,r)=>s+(r.c3||0),0),rows.reduce((s,r)=>s+(r.cEst||0),0),rows.reduce((s,r)=>s+(r.cCaj||0),0)];
+    const totR=[rows.reduce((s,r)=>s+(r.r1||0),0),rows.reduce((s,r)=>s+(r.r2||0),0),rows.reduce((s,r)=>s+(r.r3||0),0),rows.reduce((s,r)=>s+(r.rEst||0),0),rows.reduce((s,r)=>s+(r.rCaj||0),0)];
+    mkChart('ch-rt2',{type:'bar',data:{labels:tipos,datasets:[
+      {label:'Despacho',data:totD,backgroundColor:'rgba(37,99,235,.75)'},
+      {label:'Retorno',data:totR,backgroundColor:'rgba(16,185,129,.75)'}
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10},boxWidth:12}}},scales:{...baseScales}}});
+
+    // ch-rt3: semanas ordenadas por despacho desc + %Ret como línea
+    const wkS=wk.slice().sort((a,b)=>b.d-a.d);
+    const wLS=wkS.map(w=>'S'+w.wk.replace(/\d{4}-W/,''));
+    const wPS=wkS.map(w=>parseFloat(w.pct.toFixed(1)));
+    mkChart('ch-rt3',{data:{labels:wLS,datasets:[
+      {type:'bar',label:'Despacho',data:wkS.map(w=>w.d),backgroundColor:wkS.map(w=>w.pct<60?'rgba(239,68,68,.75)':w.pct<85?'rgba(245,158,11,.75)':'rgba(37,99,235,.75)'),yAxisID:'y'},
+      {type:'line',label:'% Ret',data:wPS,borderColor:'#dc2626',borderWidth:2.5,pointRadius:5,pointBackgroundColor:wPS.map(p=>pb(p)),tension:.2,yAxisID:'y2'}
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{mode:'index'}},
+      scales:{x:{grid:{display:false},ticks:{font:{size:12}}},y:{position:'left',grid:{color:gridColor},ticks:{font:{size:10}}},
+      y2:{position:'right',min:0,max:110,ticks:{callback:v=>v+'%',font:{size:10}},grid:{display:false}}}}});
+
+  } else {
+    // ── Sin filtro de mes: vista mensual original ────────────────────────────
+    rsWeekExtra.style.display='none'; dC('ch-rt2'); dC('ch-rt3');
+    if(md.length){document.getElementById('rt-ct').innerHTML='Tendencia mensual <span class="meta" id="rp">'+md[0].label+' → '+md[md.length-1].label+'</span>';}
+    document.getElementById('rc-ct').innerHTML='Despacho por Canal <span class="meta">clic para filtrar</span>';
+    const mLabs=md.map(m=>m.label),mP=md.map(m=>parseFloat(m.pct.toFixed(1)));
+    mkChart('ch-rt',{data:{labels:mLabs,datasets:[
+      {type:'bar',label:'Despacho',data:md.map(m=>m.d),backgroundColor:'rgba(37,99,235,.7)',yAxisID:'y'},
+      {type:'bar',label:'Retorno',data:md.map(m=>m.ret),backgroundColor:'rgba(16,185,129,.7)',yAxisID:'y'},
+      {type:'line',label:'% Ret',data:mP,borderColor:'#f59e0b',borderWidth:2,pointRadius:3,pointBackgroundColor:'#f59e0b',tension:.3,yAxisID:'y2'}
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{mode:'index'}},
+      scales:{x:{grid:{display:false},ticks:{font:{size:10},maxRotation:45}},y:{position:'left',grid:{color:gridColor},ticks:{font:{size:10}}},
+      y2:{position:'right',min:0,max:110,ticks:{callback:v=>v+'%',font:{size:10}},grid:{display:false}}},
+      onClick:(evt,els)=>{if(els.length>0){const ym=md[els[0].index]?.ym;if(ym){document.getElementById('fm').value=md[els[0].index]?.mn||'';refresh();}}}}});
+    const top8=cd.slice(0,8);
+    mkChart('ch-rc',{type:'doughnut',data:{labels:top8.map(c=>c.canal),datasets:[{data:top8.map(c=>c.d),backgroundColor:top8.map((c,i)=>CC[c.canal]||PA[i%PA.length]),borderWidth:2,borderColor:'#fff'}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:11},boxWidth:12}}},
+      onClick:(evt,els)=>{if(els.length>0)onClickCanal(top8[els[0].index].canal);}}});
+  }
 
   document.getElementById('rc-count').textContent=`${cd.length} canales · top 10 más críticos`;
   const cdSorted=sortByCrit(cd);
@@ -1933,7 +2007,7 @@ function captureViewImage(cb){
   const topClis=sortByCrit(clis).filter(function(c){return c.inv>0;}).slice(0,5);
 
   const viewCharts={
-    resumen:['ch-rt','ch-rc'],
+    resumen:gF().mn?['ch-rt','ch-rc','ch-rt2','ch-rt3']:['ch-rt','ch-rc'],
     fechas:['ch-fm','ch-fp','ch-fi'],
     canal:gF().cn?['ch-ctr','ch-ctr2','ch-cpct','ch-cinv']:['ch-ctr','ch-cpct','ch-cinv'],
     clientes:[],
