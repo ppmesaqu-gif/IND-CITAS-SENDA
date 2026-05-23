@@ -296,6 +296,10 @@ thead th.num{text-align:right}
         <div class="card"><div class="ct2" id="rt-ct">Tendencia mensual <span class="meta" id="rp">–</span></div><div class="cw" style="height:230px"><canvas id="ch-rt" role="img" aria-label="Tendencia mensual despacho retorno">–</canvas></div></div>
         <div class="card"><div class="ct2" id="rc-ct">Despacho por Canal <span class="meta">clic para filtrar</span></div><div class="cw" style="height:230px"><canvas id="ch-rc" role="img" aria-label="Distribucion por canal">–</canvas></div></div>
       </div>
+      <div class="g2">
+        <div class="card"><div class="ct2">D vs R por Tipo de Cubeta <span class="meta" id="rs-tipos-sub"></span></div><div class="cw" style="height:210px"><canvas id="ch-rs1" role="img" aria-label="Cubetas por tipo resumen">–</canvas></div></div>
+        <div class="card"><div class="ct2">Top 5 Mayor · 5 Menor % Retorno</div><div class="cw" style="height:210px"><canvas id="ch-rs2" role="img" aria-label="Top retorno resumen">–</canvas></div></div>
+      </div>
       <div id="rs-week-extra" style="display:none">
         <div class="g2">
           <div class="card"><div class="ct2">D vs R por Tipo de Cubeta <span class="meta" id="rt2-sub"></span></div><div class="cw" style="height:220px"><canvas id="ch-rt2" role="img" aria-label="Cubetas por tipo">–</canvas></div></div>
@@ -873,6 +877,25 @@ function rResumen(rows){
     <div class="kc a"><div class="kl"><i class="ti ti-box"></i>Inv. en Calle</div><div class="kv">${fN(ti)}</div><div class="ks">cubetas pendientes</div></div>
     <div class="kc b"><div class="kl"><i class="ti ti-users"></i>Activos</div><div class="kv">${fN(activos)}</div><div class="ks">con despachos</div></div>
     <div class="kc r"><div class="kl"><i class="ti ti-alert-triangle"></i>Críticos</div><div class="kv">${fN(crit)}</div><div class="ks">retorno &lt; 50%</div></div>`;
+
+  // ── Gráficas siempre visibles (tipos cubeta + top retorno) ──────────────
+  const rsF=gF();
+  document.getElementById('rs-tipos-sub').textContent=rsF.mn?(rsF.mn+(rsF.yr?' '+rsF.yr:'')):(rsF.yr?rsF.yr:'todo el período');
+  const rsTipos=['C1','C2','C3','Estibas','Cajas'];
+  const rsTD=[rows.reduce((s,r)=>s+(r.c1||0),0),rows.reduce((s,r)=>s+(r.c2||0),0),rows.reduce((s,r)=>s+(r.c3||0),0),rows.reduce((s,r)=>s+(r.cEst||0),0),rows.reduce((s,r)=>s+(r.cCaj||0),0)];
+  const rsTR=[rows.reduce((s,r)=>s+(r.r1||0),0),rows.reduce((s,r)=>s+(r.r2||0),0),rows.reduce((s,r)=>s+(r.r3||0),0),rows.reduce((s,r)=>s+(r.rEst||0),0),rows.reduce((s,r)=>s+(r.rCaj||0),0)];
+  mkChart('ch-rs1',{type:'bar',data:{labels:rsTipos,datasets:[
+    {label:'Despacho',data:rsTD,backgroundColor:'rgba(37,99,235,.75)'},
+    {label:'Retorno',data:rsTR,backgroundColor:'rgba(16,185,129,.75)'}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10},boxWidth:12}}},scales:{...baseScales}}});
+
+  const rsCliAll=aggCli(rows).filter(c=>c.d>0);
+  const rsByPct=rsCliAll.slice().sort((a,b)=>b.pct-a.pct);
+  const rsBest=rsByPct.slice(0,5),rsWorst=rsByPct.length>5?rsByPct.slice(-5).reverse():[];
+  const rsTop=[...rsBest,...rsWorst];
+  mkChart('ch-rs2',{type:'bar',indexAxis:'y',data:{labels:rsTop.map(c=>c.cli.substring(0,22)),datasets:[{label:'%',data:rsTop.map(c=>parseFloat(c.pct.toFixed(1))),backgroundColor:[...rsBest.map(()=>'rgba(16,185,129,.8)'),...rsWorst.map(()=>'rgba(239,68,68,.8)')]}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{min:0,max:110,ticks:{callback:v=>v+'%',font:{size:10}},grid:{color:gridColor}},y:{grid:{display:false},ticks:{font:{size:9}}}},
+    onClick:(evt,els)=>{if(els.length>0)openDetail(rsTop[els[0].index].cod);}}});
 
   const rsWeekExtra=document.getElementById('rs-week-extra');
 
@@ -2147,7 +2170,7 @@ function captureViewImage(cb){
   const topClis=sortByCrit(clis).filter(function(c){return c.inv>0;}).slice(0,5);
 
   const viewCharts={
-    resumen:gF().mn?['ch-rt','ch-rc','ch-rt2','ch-rt3']:['ch-rt','ch-rc'],
+    resumen:gF().mn?['ch-rt','ch-rc','ch-rs1','ch-rs2','ch-rt2','ch-rt3']:['ch-rt','ch-rc','ch-rs1','ch-rs2'],
     fechas:['ch-fm','ch-fp','ch-fi','ch-fv'],
     canal:gF().cn?['ch-ctr','ch-ctr2','ch-cpct','ch-cinv']:['ch-ctr','ch-ctr2','ch-cpct','ch-cinv'],
     clientes:['ch-cli1','ch-cli2','ch-cli3','ch-cli4'],
