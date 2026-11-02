@@ -1,0 +1,1268 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MateMaster — Aprende mate sin aburrirte</title>
+  <meta
+    name="description"
+    content="MateMaster: tutor inteligente de álgebra, geometría, trigonometría y vectores. 100% gratis, IA nativa, sin anuncios, con pistas, pasos, cámara y motivación."
+  />
+  <meta name="theme-color" content="#050711" />
+
+  <style>
+    :root {
+      --bg: #050711;
+      --panel: rgba(255, 255, 255, 0.06);
+      --line: rgba(255, 255, 255, 0.1);
+      --text: #f8fafc;
+      --muted: #c7d2e4;
+      --cyan: #22d3ee;
+      --violet: #8b5cf6;
+      --lime: #a3e635;
+      --pink: #f472b6;
+      --amber: #fbbf24;
+      --shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+      --radius: 24px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont,
+        "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      line-height: 1.5;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      background:
+        radial-gradient(circle at 12% 18%, rgba(139, 92, 246, 0.28), transparent 30%),
+        radial-gradient(circle at 88% 12%, rgba(34, 211, 238, 0.22), transparent 28%),
+        radial-gradient(circle at 78% 82%, rgba(244, 114, 182, 0.18), transparent 30%),
+        radial-gradient(circle at 18% 84%, rgba(163, 230, 53, 0.14), transparent 26%);
+      pointer-events: none;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    :focus-visible {
+      outline: 3px solid var(--cyan);
+      outline-offset: 3px;
+      border-radius: 12px;
+    }
+
+    .skip {
+      position: absolute;
+      left: -999px;
+      top: 0;
+      background: #fff;
+      color: #000;
+      padding: 0.6rem 1rem;
+      z-index: 100;
+      border-radius: 0 0 12px 0;
+      text-decoration: none;
+      font-weight: 800;
+    }
+
+    .skip:focus {
+      left: 0;
+    }
+
+    .container {
+      width: min(1120px, 92%);
+      margin-inline: auto;
+    }
+
+    /* NAV */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(18px);
+      background: rgba(5, 7, 17, 0.72);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.8rem 0;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      font-weight: 900;
+      letter-spacing: 0.4px;
+      text-decoration: none;
+      color: white;
+      font-size: 1.05rem;
+    }
+
+    .logo-badge {
+      width: 38px;
+      height: 38px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--violet), var(--cyan));
+      box-shadow: 0 0 24px rgba(124, 58, 237, 0.45);
+      font-size: 1.1rem;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 1.1rem;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.95rem;
+      font-weight: 700;
+    }
+
+    .nav-links a:hover {
+      color: white;
+    }
+
+    /* BUTTONS */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.55rem;
+      padding: 0.95rem 1.35rem;
+      border-radius: 999px;
+      text-decoration: none;
+      font-weight: 900;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: 0.25s;
+    }
+
+    .btn-primary {
+      background: linear-gradient(90deg, var(--violet), var(--cyan));
+      color: #041018;
+      box-shadow: 0 12px 35px rgba(34, 211, 238, 0.22);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 18px 45px rgba(139, 92, 246, 0.32);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.14);
+      color: var(--text);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.12);
+      transform: translateY(-2px);
+    }
+
+    /* HERO */
+    .hero {
+      padding: 64px 0 34px;
+      display: grid;
+      grid-template-columns: 1.08fr 0.92fr;
+      gap: 2.4rem;
+      align-items: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.55rem 0.85rem;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: var(--text);
+      font-size: 0.88rem;
+      font-weight: 900;
+      box-shadow: 0 0 25px rgba(34, 211, 238, 0.12);
+    }
+
+    h1 {
+      margin: 0.75rem 0 1rem;
+      font-size: clamp(2.5rem, 5.4vw, 4.5rem);
+      line-height: 0.98;
+      letter-spacing: -1.5px;
+    }
+
+    .gradient {
+      background-image: linear-gradient(
+        90deg,
+        var(--cyan),
+        var(--lime),
+        var(--pink),
+        var(--violet)
+      );
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: shine 6s linear infinite;
+    }
+
+    @keyframes shine {
+      to {
+        background-position: 200% center;
+      }
+    }
+
+    .lead {
+      color: var(--muted);
+      font-size: 1.12rem;
+      max-width: 56ch;
+      line-height: 1.7;
+      margin: 0;
+    }
+
+    .cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.9rem;
+      margin: 1.5rem 0 1.2rem;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.8rem;
+      margin-top: 1.2rem;
+    }
+
+    .stat {
+      padding: 1rem;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      text-align: center;
+    }
+
+    .stat b {
+      display: block;
+      font-size: 1.5rem;
+      background: linear-gradient(90deg, var(--cyan), var(--lime));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .stat span {
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    /* APP PREVIEW */
+    .app-card {
+      background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.1),
+        rgba(255, 255, 255, 0.05)
+      );
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 32px;
+      padding: 18px;
+      box-shadow: var(--shadow);
+      animation: float 6s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-10px);
+      }
+    }
+
+    .app-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .app-user {
+      display: flex;
+      gap: 0.65rem;
+      align-items: center;
+    }
+
+    .avatar {
+      width: 46px;
+      height: 46px;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--pink), var(--violet));
+      font-size: 1.3rem;
+    }
+
+    .app-level {
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .chip {
+      padding: 0.35rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 900;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .app-xp {
+      margin: 14px 0;
+    }
+
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 0.4rem;
+    }
+
+    .progress-bar {
+      height: 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.09);
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      width: 68%;
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--lime), var(--cyan));
+      box-shadow: 0 0 18px rgba(163, 230, 53, 0.35);
+    }
+
+    .problem {
+      margin: 16px 0;
+      padding: 16px;
+      border-radius: 22px;
+      background: rgba(2, 6, 23, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .problem small {
+      color: var(--cyan);
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-size: 0.72rem;
+    }
+
+    .problem strong {
+      display: block;
+      font-size: 1.6rem;
+      margin-top: 0.35rem;
+    }
+
+    .answer-row {
+      display: flex;
+      gap: 0.7rem;
+      align-items: center;
+      margin-top: 12px;
+    }
+
+    .answer-row label {
+      font-weight: 900;
+    }
+
+    .input-x {
+      width: 100px;
+      padding: 0.8rem 1rem;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: rgba(255, 255, 255, 0.08);
+      color: white;
+      font-size: 1.1rem;
+      font-weight: 800;
+      outline: none;
+    }
+
+    .input-x:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.16);
+    }
+
+    .app-actions {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.6rem;
+      margin-top: 14px;
+    }
+
+    .mini-btn {
+      padding: 0.72rem 0.5rem;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      font-weight: 900;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .mini-btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      transform: translateY(-1px);
+    }
+
+    .mini-btn.primary {
+      grid-column: 1 / -1;
+      background: linear-gradient(90deg, var(--lime), var(--cyan));
+      color: #052030;
+      border: none;
+    }
+
+    .app-note {
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 18px;
+      background: rgba(34, 211, 238, 0.08);
+      border: 1px solid rgba(34, 211, 238, 0.18);
+      color: #dffcff;
+      font-size: 0.95rem;
+    }
+
+    .success {
+      background: rgba(163, 230, 53, 0.1);
+      border-color: rgba(163, 230, 53, 0.25);
+      color: #f2ffe0;
+    }
+
+    /* SECTIONS */
+    .section {
+      padding: 64px 0;
+    }
+
+    .section-head {
+      max-width: 760px;
+      margin: 0 auto 28px;
+      text-align: center;
+    }
+
+    .kicker {
+      display: inline-block;
+      padding: 0.45rem 0.8rem;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--cyan);
+      font-size: 0.78rem;
+      font-weight: 900;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-bottom: 0.8rem;
+    }
+
+    h2 {
+      margin: 0.2rem 0 0.4rem;
+      font-size: clamp(1.8rem, 3.6vw, 3rem);
+      letter-spacing: -1px;
+    }
+
+    h3 {
+      margin: 0 0 0.45rem;
+      font-size: 1.08rem;
+    }
+
+    .sub {
+      color: var(--muted);
+      font-size: 1.05rem;
+      line-height: 1.7;
+      margin-top: 0.6rem;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 1rem;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 1.2rem;
+      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.18);
+      transition: 0.25s;
+    }
+
+    .card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(255, 255, 255, 0.22);
+    }
+
+    .card p {
+      color: var(--muted);
+      line-height: 1.65;
+      margin: 0;
+    }
+
+    .step-num {
+      width: 42px;
+      height: 42px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--violet), var(--cyan));
+      color: #031019;
+      margin-bottom: 0.8rem;
+    }
+
+    .feature-icon {
+      font-size: 1.7rem;
+      margin-bottom: 0.65rem;
+      display: block;
+    }
+
+    .subject-card .num {
+      font-size: 2.2rem;
+      font-weight: 900;
+      margin-bottom: 0.3rem;
+    }
+
+    .chiprow {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      margin-top: 0.8rem;
+    }
+
+    /* MOTIVATION */
+    .motivation-box {
+      background: linear-gradient(
+        135deg,
+        rgba(139, 92, 246, 0.18),
+        rgba(34, 211, 238, 0.12)
+      );
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 36px;
+      padding: 2.2rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .motivation-box h2 {
+      max-width: 18ch;
+      margin-inline: auto;
+    }
+
+    .motivation-box .cta-row {
+      justify-content: center;
+    }
+
+    /* FINAL CTA */
+    .final-cta {
+      text-align: center;
+      padding: 2.6rem 1.6rem;
+      border-radius: 36px;
+      background: linear-gradient(
+        135deg,
+        rgba(139, 92, 246, 0.22),
+        rgba(34, 211, 238, 0.14),
+        rgba(244, 114, 182, 0.14)
+      );
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      box-shadow: var(--shadow);
+    }
+
+    .final-cta h2 {
+      max-width: 16ch;
+      margin-inline: auto;
+    }
+
+    .final-cta p {
+      color: var(--muted);
+      max-width: 60ch;
+      margin-inline: auto;
+    }
+
+    .tiny {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-top: 1rem;
+    }
+
+    .footer {
+      padding: 2rem 0 6rem;
+      text-align: center;
+      color: var(--muted);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .footer strong {
+      letter-spacing: 0.18em;
+    }
+
+    /* FLOATING COACH / ALTAVOZ */
+    .fab {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 90;
+      display: flex;
+      align-items: flex-end;
+      gap: 0.65rem;
+    }
+
+    .fab-bubble {
+      max-width: 250px;
+      background: rgba(8, 11, 24, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      padding: 0.9rem 1rem;
+      border-radius: 22px 22px 6px 22px;
+      color: var(--text);
+      box-shadow: var(--shadow);
+      font-size: 0.92rem;
+      line-height: 1.4;
+    }
+
+    .fab-btn {
+      width: 64px;
+      height: 64px;
+      border-radius: 24px;
+      border: none;
+      cursor: pointer;
+      font-size: 1.5rem;
+      background: linear-gradient(135deg, var(--pink), var(--violet), var(--cyan));
+      color: white;
+      box-shadow: 0 16px 45px rgba(244, 114, 182, 0.35);
+      flex: 0 0 auto;
+    }
+
+    .pulse {
+      animation: pulse 0.6s ease;
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+      }
+      35% {
+        transform: scale(1.12);
+      }
+      100% {
+        transform: scale(1);
+      }
+    }
+
+    /* REVEAL */
+    .reveal {
+      opacity: 0;
+      transform: translateY(22px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: none;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 980px) {
+      .hero {
+        grid-template-columns: 1fr;
+        padding-top: 42px;
+      }
+
+      .app-card {
+        max-width: 560px;
+        margin-inline: auto;
+      }
+
+      .nav-links {
+        display: none;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .fab {
+        left: 14px;
+        right: 14px;
+        bottom: 14px;
+      }
+
+      .fab-bubble {
+        max-width: none;
+        flex: 1;
+      }
+
+      .fab-btn {
+        width: 56px;
+        height: 56px;
+        border-radius: 20px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation: none !important;
+        transition: none !important;
+      }
+
+      .reveal {
+        opacity: 1;
+        transform: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <a class="skip" href="#main">Ir al contenido</a>
+
+  <nav class="nav" aria-label="Navegación principal">
+    <div class="container nav-inner">
+      <a class="logo" href="#">
+        <span class="logo-badge" aria-hidden="true">∑</span>
+        MateMaster
+      </a>
+
+      <div class="nav-links">
+        <a href="#como-funciona">Cómo funciona</a>
+        <a href="#por-que">Por qué</a>
+        <a href="#temas">Temas</a>
+        <a href="algebra-master.html" class="btn btn-primary" style="padding: 0.65rem 1rem">
+          Empezar gratis
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <main id="main">
+    <!-- HERO -->
+    <header class="container hero">
+      <div>
+        <span class="badge">✨ 100% Gratis · IA Nativa · Sin Anuncios</span>
+
+        <h1>
+          Aprende mate con un tutor que te habla
+          <span class="gradient">claro, cerca y motivador</span>
+        </h1>
+
+        <p class="lead">
+          Álgebra, geometría, trigonometría y vectores con ejercicios infinitos,
+          pistas paso a paso y cámara para escanear tu tarea.
+          Sin registro. Sin miedo. A tu ritmo.
+        </p>
+
+        <div class="cta-row">
+          <a class="btn btn-primary" href="algebra-master.html">
+            🚀 Empezar ahora — es gratis
+          </a>
+          <a class="btn btn-secondary" href="#como-funciona">
+            ▶ Ver cómo funciona
+          </a>
+        </div>
+
+        <div class="stats" aria-label="Datos rápidos de MateMaster">
+          <div class="stat"><b>44</b><span>Temas de práctica</span></div>
+          <div class="stat"><b>4</b><span>Materias</span></div>
+          <div class="stat"><b>$0</b><span>Costo, siempre</span></div>
+          <div class="stat"><b>📷</b><span>Escanea tu tarea</span></div>
+        </div>
+      </div>
+
+      <!-- MOCK APP -->
+      <div class="app-card" aria-label="Vista previa del tutor MateMaster">
+        <div class="app-top">
+          <div class="app-user">
+            <div class="avatar" aria-hidden="true">🤖</div>
+            <div>
+              <strong>MM Tutor</strong>
+              <div class="app-level">Álgebra · Nivel 1 · Ecuaciones lineales</div>
+            </div>
+          </div>
+          <div class="chip">🔥 Racha 0</div>
+        </div>
+
+        <div class="app-xp">
+          <div class="progress-label">
+            <span>⚡ Experiencia</span>
+            <span>68%</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill"></div>
+          </div>
+        </div>
+
+        <div class="problem">
+          <small>Reto de hoy</small>
+          <strong>3x + 6 = 15</strong>
+
+          <div class="answer-row">
+            <label for="answerX">x =</label>
+            <input
+              id="answerX"
+              class="input-x"
+              type="text"
+              inputmode="numeric"
+              value="3"
+              aria-label="Tu respuesta"
+            />
+          </div>
+        </div>
+
+        <div class="app-actions">
+          <button id="hintBtn" class="mini-btn" type="button">❓ Pista</button>
+          <button id="stepsBtn" class="mini-btn" type="button">👁 Pasos</button>
+          <button
+            class="mini-btn"
+            type="button"
+            data-speak="Respira, lee el problema y da el primer paso. Yo te acompaño."
+          >
+            🔊 Ánimo
+          </button>
+          <button id="verifyBtn" class="mini-btn primary" type="button">
+            ✅ Verificar
+          </button>
+        </div>
+
+        <div id="appNote" class="app-note" role="status">
+          💬 Tú puedes. Un paso a la vez: primero despeja el 6.
+        </div>
+      </div>
+    </header>
+
+    <!-- CÓMO FUNCIONA -->
+    <section id="como-funciona" class="section">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="kicker">Cómo funciona</span>
+          <h2>De la duda a la solución en segundos</h2>
+          <p class="sub">
+            Elige un tema o toma una foto. MateMaster te acompaña con pistas,
+            pasos completos y motivación para seguir.
+          </p>
+        </div>
+
+        <div class="grid-4">
+          <article class="card reveal">
+            <div class="step-num">1</div>
+            <h3>Elige un tema</h3>
+            <p>
+              Álgebra, geometría euclidiana, trigonometría o vectorial — desde básico hasta
+              avanzado.
+            </p>
+          </article>
+
+          <article class="card reveal">
+            <div class="step-num">2</div>
+            <h3>O toma una foto</h3>
+            <p>
+              Escanea tu tarea impresa — hasta varios ejercicios en una sola
+              foto.
+            </p>
+          </article>
+
+          <article class="card reveal">
+            <div class="step-num">3</div>
+            <h3>Resuelve con ayuda</h3>
+            <p>
+              Pistas, pasos completos y un chat que responde tus dudas
+              específicas.
+            </p>
+          </article>
+
+          <article class="card reveal">
+            <div class="step-num">4</div>
+            <h3>Sube de nivel</h3>
+            <p>
+              Gana XP, mantén tu racha y el sistema se adapta a tu progreso.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- POR QUÉ -->
+    <section id="por-que" class="section">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="kicker">Por qué MateMaster</span>
+          <h2>Hecho para estudiar de verdad</h2>
+          <p class="sub">
+            Cercano, motivador y sin fricción: abres la app y empiezas a
+            practicar.
+          </p>
+        </div>
+
+        <div class="grid-4">
+          <article class="card reveal">
+            <span class="feature-icon">🧠</span>
+            <h3>IA 100% nativa</h3>
+            <p>
+              Todo el motor de ejercicios y explicaciones corre en tu navegador,
+              sin depender de servidores externos.
+            </p>
+          </article>
+
+          <article class="card reveal">
+            <span class="feature-icon">📷</span>
+            <h3>Escáner de cámara</h3>
+            <p>
+              Fotografía tu hoja de ejercicios — detecta varios a la vez y los
+              resuelve uno por uno con pasos claros.
+            </p>
+          </article>
+
+          <article class="card reveal">
+            <span class="feature-icon">💬</span>
+            <h3>Tutor que responde</h3>
+            <p>
+              Pregúntale “¿por qué resto 4?” y obtén una explicación real, no
+              solo la respuesta.
+            </p>
+          </article>
+
+          <article class="card reveal">
+            <span class="feature-icon">🏆</span>
+            <h3>Gamificado</h3>
+            <p>
+              XP, niveles y racha de aciertos que te mantienen motivado sesión
+              tras sesión.
+            </p>
+          </article>
+
+          <article class="card reveal">
+            <span class="feature-icon">🌐</span>
+            <h3>4 idiomas</h3>
+            <p>
+              Toda la interfaz disponible en español, inglés, francés y
+              portugués.
+            </p>
+          </article>
+
+          <article class="card reveal">
+            <span class="feature-icon">📱</span>
+            <h3>Funciona en cualquier Android</h3>
+            <p>
+              Instálala como app — el motor de ejercicios corre localmente, sin
+              gastar datos móviles.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- TEMAS -->
+    <section id="temas" class="section">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="kicker">Contenido</span>
+          <h2>Básico a avanzado, en 4 materias</h2>
+          <p class="sub">
+            Práctica real, progresiva y directa a lo que necesitas entender.
+          </p>
+        </div>
+
+        <div class="grid-4">
+          <article class="card subject-card reveal">
+            <div class="num gradient">17</div>
+            <h3>🔢 Álgebra</h3>
+            <p>
+              De ecuaciones de un paso hasta fórmula general cuadrática y
+              sistemas de ecuaciones.
+            </p>
+            <div class="chiprow">
+              <span class="chip">Lineales</span>
+              <span class="chip">Cuadráticas</span>
+              <span class="chip">Sistemas</span>
+            </div>
+          </article>
+
+          <article class="card subject-card reveal">
+            <div class="num gradient">10</div>
+            <h3>📐 Geometría Euclidiana</h3>
+            <p>
+              Perímetros, áreas, Pitágoras, semejanza de triángulos, círculos y
+              fórmula de Herón.
+            </p>
+            <div class="chiprow">
+              <span class="chip">Áreas</span>
+              <span class="chip">Pitágoras</span>
+              <span class="chip">Herón</span>
+            </div>
+          </article>
+
+          <article class="card subject-card reveal">
+            <div class="num gradient">8</div>
+            <h3>🔺 Trigonometría</h3>
+            <p>
+              Teoría de ángulos, seno, coseno, tangente, ángulos notables y
+              leyes de senos y cosenos.
+            </p>
+            <div class="chiprow">
+              <span class="chip">Seno</span>
+              <span class="chip">Coseno</span>
+              <span class="chip">Leyes</span>
+            </div>
+          </article>
+
+          <article class="card subject-card reveal">
+            <div class="num gradient">9</div>
+            <h3>➡️ Geometría Vectorial</h3>
+            <p>
+              Componentes, suma y resta, producto punto y cruz, combinación
+              lineal de vectores.
+            </p>
+            <div class="chiprow">
+              <span class="chip">Vectores</span>
+              <span class="chip">Producto punto</span>
+              <span class="chip">Producto cruz</span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- MOTIVACIÓN -->
+    <section class="section" aria-label="Sección motivacional">
+      <div class="container">
+        <div class="motivation-box reveal">
+          <span class="kicker">Modo motivación</span>
+          <h2>
+            Hoy es un buen día para entender lo que ayer parecía imposible
+          </h2>
+          <p class="sub">
+            No necesitas ser “genio”. Necesitas práctica, pistas y alguien que te
+            explique sin juzgarte.
+          </p>
+
+          <div class="cta-row">
+            <button
+              class="btn btn-primary"
+              type="button"
+              data-speak="¡Hola! Soy tu coach de MateMaster. Hoy vamos a convertir ese no puedo en ya casi."
+            >
+              🔊 Dame motivación
+            </button>
+            <a class="btn btn-secondary" href="#empezar">
+              Empezar 10 minutos
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FINAL CTA -->
+    <section id="empezar" class="section">
+      <div class="container">
+        <div class="final-cta reveal">
+          <h2>¿Listo para pasar de “no entiendo” a “ya me salió”?</h2>
+          <p>
+            Sin registro, sin tarjeta de crédito, sin anuncios. Solo abre la app
+            y empieza a practicar.
+          </p>
+
+          <div class="cta-row" style="justify-content: center">
+            <a class="btn btn-primary" href="algebra-master.html">
+              ✨ Empezar gratis ahora →
+            </a>
+          </div>
+
+          <p class="tiny">ES · EN · FR · PT — Motor de tutoría 100% nativo</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <strong>MATEMASTER</strong>
+      <p>Motor de tutoría 100% nativo · Disponible en 4 idiomas</p>
+    </div>
+  </footer>
+
+  <!-- ALTAVOZ MOTIVACIONAL -->
+  <div class="fab">
+    <div
+      id="coachBubble"
+      class="fab-bubble"
+      role="status"
+      aria-live="polite"
+    >
+      ¡Hola! Soy tu coach de MateMaster. Hoy vamos a convertir ese “no puedo” en
+      “ya casi”.
+    </div>
+
+    <button
+      id="coachBtn"
+      class="fab-btn"
+      type="button"
+      aria-label="Escuchar motivación"
+    >
+      🔊
+    </button>
+  </div>
+
+  <script>
+    const phrases = [
+      "¡Hola! Soy tu coach de MateMaster. Hoy vamos a convertir ese “no puedo” en “ya casi”.",
+      "Un error no te frena: te muestra el siguiente paso.",
+      "Si hoy practicas 10 minutos, mañana lo vas a notar.",
+      "El álgebra no es magia: es práctica con pistas.",
+      "¡Tu primera racha ya cuenta! Empezar es ganar.",
+      "Respira, lee el problema y da el primer paso. Yo te acompaño."
+    ];
+
+    let idx = 0;
+
+    const bubble = document.getElementById("coachBubble");
+    const coachBtn = document.getElementById("coachBtn");
+
+    function showPhrase(text) {
+      bubble.textContent = text;
+    }
+
+    function nextPhrase() {
+      idx = (idx + 1) % phrases.length;
+      showPhrase(phrases[idx]);
+    }
+
+    setInterval(nextPhrase, 7000);
+
+    // Detección real de soporte de voz: algunos navegadores/entornos exponen
+    // "speechSynthesis" pero no el constructor SpeechSynthesisUtterance, lo
+    // que rompía este botón. Ahora se revisan ambos antes de usarlos.
+    const TTS_AVAILABLE = ("speechSynthesis" in window) && (typeof window.SpeechSynthesisUtterance === "function");
+
+    function speak(text) {
+      if (!TTS_AVAILABLE) {
+        showPhrase(text + " (Tu navegador no tiene voz activada, pero aquí estoy contigo.)");
+        return;
+      }
+      try {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = "es-ES";
+        utterance.rate = 1.03;
+        utterance.pitch = 1.06;
+        window.speechSynthesis.speak(utterance);
+      } catch (e) {
+        console.warn("Voz no disponible en este entorno:", e);
+      }
+    }
+
+    if (!TTS_AVAILABLE) {
+      coachBtn.textContent = "🔇";
+      coachBtn.setAttribute("aria-label", "Voz no disponible en este navegador");
+    }
+
+    coachBtn.addEventListener("click", () => {
+      const phrase = phrases[idx];
+      speak(phrase);
+
+      coachBtn.classList.remove("pulse");
+      void coachBtn.offsetWidth;
+      coachBtn.classList.add("pulse");
+    });
+
+    document.querySelectorAll("[data-speak]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        speak(btn.dataset.speak);
+      });
+    });
+
+    // Animaciones al hacer scroll
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.14 }
+    );
+
+    document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
+
+    // Interacción del mini tutor
+    const verifyBtn = document.getElementById("verifyBtn");
+    const hintBtn = document.getElementById("hintBtn");
+    const stepsBtn = document.getElementById("stepsBtn");
+    const appNote = document.getElementById("appNote");
+    const answerX = document.getElementById("answerX");
+
+    if (verifyBtn && appNote && answerX) {
+      verifyBtn.addEventListener("click", () => {
+        const answer = answerX.value.trim();
+
+        if (answer === "3") {
+          appNote.textContent =
+            "✅ ¡Bien! 3x + 6 = 15 → 3x = 9 → x = 3. ¡Sigue así!";
+          appNote.classList.add("success");
+          speak("¡Muy bien! Lo lograste paso a paso.");
+        } else {
+          appNote.textContent =
+            "💡 Casi. Pista: resta 6 en ambos lados y luego divide entre 3.";
+          appNote.classList.remove("success");
+          speak("Casi. Resta seis en ambos lados y luego divide entre tres.");
+        }
+      });
+    }
+
+    if (hintBtn && appNote) {
+      hintBtn.addEventListener("click", () => {
+        appNote.textContent =
+          "💡 Pista: pasa el 6 restando: 3x = 15 - 6.";
+        appNote.classList.remove("success");
+        speak("Pista: pasa el seis restando.");
+      });
+    }
+
+    if (stepsBtn && appNote) {
+      stepsBtn.addEventListener("click", () => {
+        appNote.textContent =
+          "👁 Pasos: 1) 3x + 6 = 15  2) 3x = 9  3) x = 9/3  4) x = 3.";
+        appNote.classList.remove("success");
+        speak("Vamos paso a paso. Tú puedes.");
+      });
+    }
+  </script>
+</body>
+</html>
+
+</body></html>
